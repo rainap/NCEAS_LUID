@@ -5,16 +5,16 @@
 ##   Code for model to examine shrinking habitat and pathogen burdens       #
 ##                                                                          #
 #############################################################################
-
+rm(list = ls())
 #  install.package("ggplot2")
 library("ggplot2")
 
-##  Set range of Areas
-Amax = 100
-SpecArea=numeric(Amax)
-
-# Set a range of Area values
+##  Set range of pathogen Ros
+Amax = 100 # maximum number of unique patches
 Area=numeric(Amax)
+SpecRich=numeric(Amax)
+
+#  Set a range of Area values
 Area[1]=1.0
 for(i in 1: (Amax/10) ) { 
   Area[i+1]=Area[i]+1
@@ -32,32 +32,23 @@ for(i in (Amax*3/4):(Amax-1)) {
   Area[i+1]=Area[i]+20
 }
 
-#Set up 12 Hosts
-Hosts=12
-# Set a range of body masses  in Kg
+#Hosts
+Hosts=12  #number of host species
+
 Mass=numeric(Hosts)
-Mass[1]=0.05
-Mass[2]=0.10
-Mass[3]=0.20
-Mass[4]=0.333
-Mass[5]=0.5
-Mass[6]=1.0
-Mass[7]=2.
-Mass[8]=3.333
-Mass[9]=5.0
-Mass[10]=10.0
-Mass[11]=20.0
-Mass[12]=50.0
+# Set a range of body masses in Kg
+Mass[1:12]=c(0.05,0.10,0.20,0.333,0.5, 1.0, 2.0, 3.333, 5.0, 10.0, 20.0, 50.0)
 
-#Parameters for each host species
 Dens = numeric(Hosts) #assume each host has a unique density that is fixed
-Beta = numeric(Hosts) #each host has a unique transmission rate
-r = numeric(Hosts) #reproduction rates for each host
-d = numeric(Hosts) #death rates
-
-Prev=matrix(NA, ncol = Amax, nrow = Hosts)
-HDen=matrix(NA, ncol = Amax, nrow = Hosts)
-IDen=matrix(NA, ncol = Amax, nrow = Hosts)
+BetaD = numeric(Hosts) #density dependent transmission; each host has a unique rate that is fixed
+BetaF = numeric(Hosts) #frequency dependent transmission; each host has a unique rate that is fixed
+r = numeric(Hosts) #reproduction rates for each host are dependent of mass (births - deaths)
+d = numeric(Hosts) #death rates for each host; dependent on mass
+alphaF = numeric(Hosts) #disease induced mortality for Frequency dependent pathogens
+alphaD = numeric(Hosts) #disease induced mortality for density dependent pathogens
+delta = numeric(Hosts)
+R0F=numeric(Hosts)
+R0D= numeric(Hosts)
 
 
 # Set Carrying capacity for each host species (#/km^2)
@@ -65,82 +56,169 @@ IDen=matrix(NA, ncol = Amax, nrow = Hosts)
 #  m is increase in host mortality rate
 
 #  Density-dependent transmission
-m = 26
+md = 26  #26x the background mortality rate
 for (i in 1:Hosts) {
     Dens[i]=16.2*Mass[i]^-0.70
-    Beta[i]=0.0247*m*Mass[i]^0.44
-     r[i]=0.6*Mass[i]^-0.26
-     d[i]=0.4*Mass[i]^-0.27
+    BetaD[i]=0.045*md*Mass[i]^0.44 
+     r[i]=0.6*Mass[i]^-0.26  # births - deaths
+     d[i]=0.4*Mass[i]^-0.27 #  
+     delta[i] = (r[i]/Dens[i])  #real way to represent b-d/N*
+     alphaD[i]= d[i]*md
+     R0D[i] = BetaD[i]/(d[i]+alphaD[i])
     }
 
+plot(log10(Mass), r, main="birth, death, delta by model size")
+points(log10(Mass), d, pch=20)
+plot(log10(Mass), delta, pch=20, col="red")
+plot(log10(Mass), Dens)
+plot(log10(Mass), BetaD)
 #  Frequency-dependent transmission
-m = 1.12
+
+mf = 1.12 #1.12 
 for (i in 1:Hosts) {
-    Dens[i]=16.2*Mass[i]^-0.70
-    Beta[i]=0.4*m*Mass[i]^-0.26
-     r[i]=0.6*Mass[i]^-0.26
-     d[i]=0.4*Mass[i]^-0.27
+    BetaF[i]=1.3*mf*Mass[i]^-0.26
+    alphaF[i]= d[i]*mf
+    R0F[i] = BetaF[i]/(d[i]+alphaF[i])
     }
 
+plot(log10(Mass),log10(BetaF),pch=20)
+plot(log10(Mass),log10(BetaD), pch=20, col="red")
+plot(log10(Mass), R0F, ylim=c(0,3))
+points(log10(Mass), R0D*Dens, pch=20)
 
 ##########################################################
+#       Determine abundance in each patch
+#            and then calculate number infected hosts for frequency dependent pathogens.
 #
-#       Set abundance in each patch
-#            and then calculate number infected hosts
-#
+PatchK=matrix(NA, ncol = Amax, nrow = Hosts) #Number of Host individuals in a given species+patch; carrycapacity for patch
+DisPatchKF=matrix(NA, ncol = Amax, nrow = Hosts)
+IAbunF=matrix(NA, ncol = Amax, nrow = Hosts) #Number of Infected Individuals
+PrevF=matrix(NA, ncol = Amax, nrow = Hosts) # Prevalence 
 
 for(i in 1:Amax)   {
-     SpecArea[i]=0
+     SpecRich[i]=0
      for(j in 1:Hosts) {
-     HDen[j,i]=Dens[j]*Area[i]/500
-     if (HDen[j,i]>1) HDen[j,i] else HDen[j,i]=0
-     if  (HDen[j,i]>1) SpecArea[i]=SpecArea[i]+1 else SpecArea[i]
-#
-#    Pathogen prevalence
-#     
-     Prev[j,i]=(r[j]/(m+d[j]))/(1+(r[j]/(m+d[j])))
-     IDen[j,i]=Prev[j,i]*HDen[j,i]
-     
+     PatchK[j,i]=Dens[j]*Area[i] #fix scales
+     if (PatchK[j,i]>1) PatchK[j,i] else PatchK[j,i]=0
+     DisPatchKF[j,i]=((r[j]+d[j]+alphaF[j]-BetaF[j])/delta[j])*Area[i]
+     if (DisPatchKF[j,i]>1) DisPatchKF[j,i] else DisPatchKF[j,i]=0
+     if (DisPatchKF[j,i]>1) SpecRich[i]=SpecRich[i]+1 else SpecRich[i]
+     PrevF[j,i]=(r[j]-(delta[j]*(DisPatchKF[j,i]/Area[i])))/BetaF[j]
+     IAbunF[j,i]=PrevF[j,i]*DisPatchKF[j,i]
      }
    }  
 
 ##   Boring plot of the number of hosts in each patch
 
 par(mfrow=c(1,1))  
-plot(Area, HDen[1,], ylab='Hosts', xlab='Patch Area(km^2)',
-  col ="red", log = "x", ylim = c(0.1, 1000), main = 'Number in patches of different size' )
-points(Area, HDen[2,], col = "blue")
-points(Area, HDen[5,], col = "green") 
-points(Area, HDen[6,], col= "black")
-points(Area, HDen[9,], col= "orange") 
+plot(Area, PatchK[1,], ylab='Hosts', xlab='Patch Area(km^2)',
+  col ="red", log = "x", #ylim = c(0.1, 300), 
+  main = 'Number of individuals in patches of different size',
+  pch=20)
+points(Area, DisPatchKF[1,], col="red", cex=.5)
+points(Area, DisPatchKD[1,], col="red", cex=.5,pch=2)
+
+points(Area, PatchK[2,], col = "blue",pch=20)
+points(Area, PatchK[5,], col = "green", pch=20) 
+points(Area, PatchK[6,], col= "black", pch=20)
+points(Area, PatchK[9,], col= "orange", pch=20) 
+leg.text<-c("5gram", "100gram ", "500gram ", "1kg ", "5kg")
+legend("topleft",leg.text,lty=rep(1,4),col=c( "red", "blue", "green", "black", "orange"),bty="n")
+ 
+
+##  Do a quick plot of the  number of infected hosts        
+ 
+plot(Area, IAbunF[1,], ylab='Infected Hosts', xlab='Patch Area(km^2)',
+  col ="red", log = "x", #ylim = c(0.1, 100), 
+  main = 'Number in patches of different size',
+  pch=20)
+points(Area, IAbunF[2,], col = "blue", pch=20)
+points(Area, IAbunF[5,], col = "green", pch=20) 
+points(Area, IAbunF[6,], col= "black", pch=20)
+points(Area, IAbunF[9,], col= "orange", pch=20) 
+legend("topleft",leg.text,lty=rep(1,4),
+       col=c("red", "blue", "green", "black", "orange"),bty="n")
+ 
+
+## Boring plot of the prevalence data
+plot(Area, PrevF[1,], ylab='Prevalence', xlab='Patch Area(km^2)',
+  col ="red", log = "x", #ylim = c(0.01, 1.0), 
+  main = 'Prevalence in patches of different size',
+  pch=20)
+points(Area, PrevF[2,], col = "blue", pch=20)
+points(Area, PrevF[5,], col = "green", pch=20) 
+points(Area, PrevF[6,], col= "black", pch=20)
+points(Area, PrevF[9,], col= "orange", pch=20) 
+leg.text<-c("5gram", "100gram ", "500gram ", "1kg ", "5kg")
+legend("topleft",leg.text,lty=rep(1,4),
+       col=c("red", "blue", "green", "black", "orange"),bty="n")
+
+
+
+##########################################################
+#       DENSITY dependent pathogens
+#
+DisPatchKD=matrix(NA, ncol = Amax, nrow = Hosts)
+IAbunD=matrix(NA, ncol = Amax, nrow = Hosts) #Number of Infected Individuals
+PrevD=matrix(NA, ncol = Amax, nrow = Hosts) # Prevalence 
+
+for(i in 1:Amax)   {
+  SpecRich[i]=0
+  for(j in 1:Hosts) {
+    PatchK[j,i]=Dens[j]*Area[i] 
+    if (PatchK[j,i]>1) PatchK[j,i] else PatchK[j,i]=0
+    DisPatchKD[j,i]=((r[j]+d[j]+alphaD[j])/(BetaD[j]+delta[j]))*Area[i]
+    if (DisPatchKD[j,i]>1) DisPatchKD[j,i] else DisPatchKD[j,i]=0
+    if (DisPatchKD[j,i]>1) SpecRich[i]=SpecRich[i]+1 else SpecRich[i]
+    PrevD[j,i]=((r[j]-(delta[j]*((r[j]+d[j]+alphaD[j])/(BetaD[j]+delta[j]))))/BetaD[j])/
+      ((r[j]+d[j]+alphaD[j])/(BetaD[j]+delta[j]))
+    IAbunD[j,i]=PrevD[j,i]*DisPatchKD[j,i]
+  }
+}  
+
+##   Boring plot of the number of hosts in each patch
+
+par(mfrow=c(1,1))  
+plot(Area, PatchK[1,], ylab='Hosts', xlab='Patch Area(km^2)',
+     col ="red", log = "x", #ylim = c(0.1, 300), 
+     main = 'Number of individuals in patches of different size',
+     pch=20)
+plot(Area, DisPatchKD[1,]/Area, col='red')
+points(Area, PatchK[2,], col = "blue",pch=20)
+points(Area, PatchK[5,], col = "green", pch=20) 
+points(Area, PatchK[6,], col= "black", pch=20)
+points(Area, PatchK[9,], col= "orange", pch=20) 
 leg.text<-c("5gram", "100gram ", "500gram ", "1kg ", "5kg")
 legend("topleft",leg.text,lty=rep(1,4),col=c( "red", "blue", "green", "black", "orange"),bty="n")
 
 
 ##  Do a quick plot of the  number of infected hosts        
 
-par(mfrow=c(1,1))  
-plot(Area, IDen[1,], ylab='Infected Hosts', xlab='Patch Area(km^2)',
-  col ="red", log = "x", ylim = c(0.1, 100), main = 'Number in patches of different size' )
-points(Area, IDen[2,], col = "blue")
-points(Area, IDen[5,], col = "green") 
-points(Area, IDen[6,], col= "black")
-points(Area, IDen[9,], col= "orange") 
-leg.text<-c("5gram", "100gram ", "500gram ", "1kg ", "5kg")
-legend("topleft",leg.text,lty=rep(1,4),col=c("red", "blue", "green", "black", "orange"),bty="n")
- 
+plot(Area, IAbunD[1,], ylab='Infected Hosts', xlab='Patch Area(km^2)',
+     col ="red", log = "x",# ylim = c(0.1, 100), 
+     main = 'Number in patches of different size',
+     pch=20)
+points(Area, IAbunD[2,], col = "blue", pch=20)
+points(Area, IAbunD[5,], col = "green", pch=20) 
+points(Area, IAbunD[6,], col= "black", pch=20)
+points(Area, IAbunD[9,], col= "orange", pch=20) 
+legend("topleft",leg.text,lty=rep(1,4),
+       col=c("red", "blue", "green", "black", "orange"),bty="n")
 
-##  ##   Boring plot of the prevalence data
 
-par(mfrow=c(1,1))  
-plot(Area, Prev[1,], ylab='Prevalence', xlab='Patch Area(km^2)',
-  col ="red", log = "x", ylim = c(0.01, 0.5), main = 'Prevalence in patches of different size' )
-points(Area, Prev[2,], col = "blue")
-points(Area, Prev[5,], col = "green") 
-points(Area, Prev[6,], col= "black")
-points(Area, Prev[9,], col= "orange") 
+## Boring plot of the prevalence data
+plot(Area, PrevD[1,], ylab='Prevalence', xlab='Patch Area(km^2)',
+     col ="red", log = "x", ylim = c(0,0.1), 
+     main = 'Prevalence in patches of different size',
+     pch=20)
+points(Area, PrevD[2,], col = "blue", pch=20)
+points(Area, PrevD[5,], col = "green", pch=20) 
+points(Area, PrevD[6,], col= "black", pch=20)
+points(Area, PrevD[9,], col= "orange", pch=20) 
 leg.text<-c("5gram", "100gram ", "500gram ", "1kg ", "5kg")
-legend("topleft",leg.text,lty=rep(1,4),col=c("red", "blue", "green", "black", "orange"),bty="n")
+legend("topleft",leg.text,lty=rep(1,4),
+       col=c("red", "blue", "green", "black", "orange"),bty="n")
+
 
 
 ###########################################################################
@@ -148,8 +226,8 @@ legend("topleft",leg.text,lty=rep(1,4),col=c("red", "blue", "green", "black", "o
 ##      Species Area curve
 
 par(mfrow=c(1,1))
-plot(Area, SpecArea, ylab="Species", xlab="Area of Patch", log="x",
-      main= "Species Area Curve")
+plot(Area, SpecRich, ylab="Species", xlab="Area of Patch", log="x",
+      main= "Species Area Curve", pch=20)
       
 ## Now add the number of infected together to get at net risk 
 
@@ -161,11 +239,11 @@ for(i in 1:Amax)   {
      SumDen[i]=0.0
      ISumDen[i]=0.0
      for(j in 1:Hosts) {
-     SumDen[i]=HDen[j,i]+SumDen[i]
+     SumDen[i]=PatchK[j,i]+SumDen[i]
 #
 #    Pathogen prevalence
 #     
-     ISumDen[i]=IDen[j,i]+ISumDen
+     ISumDen[i]=IAbunF[j,i]+ISumDen
      }
    AvgPrev[i]=ISumDen[i]/SumDen[i]
    }  
@@ -204,16 +282,16 @@ round(res, 3)
 ####
 
 ###########################################################
-out <- qplot(Area,HDen[1,],color=qsec)
- + qplot(Area, HDen[2,], color =qsec)
+out <- qplot(Area,PatchK[1,],color=qsec)
+ + qplot(Area, PatchK[2,], color =qsec)
  
  out
  
 
 ## Superimpose plots on top of each other
 
-qplot(Area,Prev[1,],color=red)
-qplot(Area,Prev[2,],color=blue)
+qplot(Area,Prev[1,],color="red")
+qplot(Area,Prev[2,],color="blue")
 
 # p.tmp
    
