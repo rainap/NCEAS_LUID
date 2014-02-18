@@ -45,4 +45,3 @@ symbols(x=log10(bodysize$patch_area), y=(bodysize$density+1),
         bty="n", las=1, cex.lab=1)
 legend("topleft", bty="n",names(table(bodysize$type)), 
        pch=20, col=colors)
-
