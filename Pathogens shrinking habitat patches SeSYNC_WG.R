@@ -50,7 +50,6 @@ delta = numeric(Hosts)
 R0F=numeric(Hosts)
 R0D= numeric(Hosts)
 
-
 # Set Carrying capacity for each host species (#/km^2)
 #  and also r and d for host transmission rate for pathogen
 #  m is increase in host mortality rate
@@ -67,11 +66,8 @@ for (i in 1:Hosts) {
      R0D[i] = BetaD[i]/(d[i]+alphaD[i])
     }
 
-plot(log10(Mass), r, main="birth, death, delta by model size")
-points(log10(Mass), d, pch=20)
-plot(log10(Mass), delta, pch=20, col="red")
-plot(log10(Mass), Dens)
-plot(log10(Mass), BetaD)
+
+
 #  Frequency-dependent transmission
 
 mf = 1.12 #1.12 
@@ -81,10 +77,27 @@ for (i in 1:Hosts) {
     R0F[i] = BetaF[i]/(d[i]+alphaF[i])
     }
 
-plot(log10(Mass),log10(BetaF),pch=20)
-plot(log10(Mass),log10(BetaD), pch=20, col="red")
-plot(log10(Mass), R0F, ylim=c(0,3))
-points(log10(Mass), R0D*Dens, pch=20)
+
+plot(Mass, R0F, log='x',  bty="n", ylim=c(0,3), ylab='R0')
+points(Mass, R0D*Dens, pch=20)
+legend('topleft', pch=c(1,20), bty='n',
+       c("frequency dependent", "density dependent"))
+
+plot(Mass, r, main="birth, death, delta by body size",
+     log='x',  bty="n", ylim=c(0,1.2), xlab='',
+     las=1, pch=20, xlim=c(0.1,50), col="red")
+points(Mass, d, pch=20)
+points(Mass, delta,log='x', pch=20, col="navy")
+
+plot(Mass, Dens, log='x',  bty="n", 
+     las=1, pch=20, xlim=c(0.1,50), ylab='density (individuals/km2)')
+
+plot(Mass, BetaD, log='x', 
+     main="Beta for hosts, same R0",
+     bty="n", las=1, pch=20, ylim=c(0,7), xlim=c(0.1,50))
+points(Mass, BetaF)
+legend('topleft', pch=c(1,20), bty='n',
+       c("frequency dependent", "density dependent"))
 
 ##########################################################
 #       Determine abundance in each patch
