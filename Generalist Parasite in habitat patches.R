@@ -53,7 +53,7 @@ for (i in 1:Hosts) {
   betaD[i]=0.045*md*Mass[i]^0.44 
   r[i]=0.6*Mass[i]^-0.26  # births - deaths
   d[i]=0.4*Mass[i]^-0.27 #  
-  b[i]=r[i]-d[i]
+  b[i]=r[i]+d[i]
   delta[i] = (r[i]/Dens[i])  #real way to represent b-d/N*
   alphaD[i]= d[i]*md
   gamma[i]=0.1*Mass[i]^-0.27
@@ -120,10 +120,10 @@ layout.show(6)
 plot(times, out$S1, type= 'l', col="peru", 
       xlab = 'days',main= 'Species 1', bty="n", xlim=c(0,10))
 lines(times, out$I1, type= 'l', col="peru", lty=2)
-plot(times, out$S2, type= 'l', col="darkgreen", xlim=c() 
-     xlab = 'days',main= 'Species 2', bty="n",)
+plot(times, out$S2, type= 'l', col="darkgreen", xlim=c(0,10), 
+     xlab = 'days',main= 'Species 2', bty="n")
 lines(times, out$I2, type= 'l', col="darkgreen", lty=2)
-plot(times, out$S2, type= 'l', col="peru", 
-     xlab = 'days',main= 'Species 2', bty="n",)
-lines(times, out$I2, type= 'l', col="red", lty=2)
-plot(times, out$S2, type)
+plot(times, out$S3, type= 'l', col="navy", 
+     xlab = 'days',main= 'Species 3', bty="n")
+lines(times, out$I3, type= 'l', col="navy", lty=2)
+lines(times, out$S3+out$I3, pch=20, col="navy")
