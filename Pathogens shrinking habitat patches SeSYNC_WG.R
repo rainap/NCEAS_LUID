@@ -124,8 +124,8 @@ for(i in 1:Amax)   {
 ##   Boring plot of the number of hosts in each patch
 
 par(mfrow=c(1,1))  
-plot(Area, PatchK[1,], ylab='Hosts', xlab='Patch Area(km^2)',
-  col ="red", log = "x", #ylim = c(0.1, 300), 
+plot(Area, PatchK[1,],  ylab='Hosts', xlab='Patch Area(km^2)',
+  col ="red", log = c("x", 'y'), #ylim = c(0.1, 300), 
   main = 'Number of individuals in patches of different size',
   pch=20)
 points(Area, DisPatchKF[1,], col="red", cex=.5)
