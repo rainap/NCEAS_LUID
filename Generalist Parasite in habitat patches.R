@@ -93,7 +93,7 @@ parameters <- c(betaF,
                 gamma)
 
 
-threehostpatch <- function(t, state, parameters) {
+threehostpatchF <- function(t, state, parameters) {
   with(as.list(c(state, parameters)), {
     dS1 <- b[1]*(S1+I1)-((betaF[1]*S1*I1)/(S1*I1)+(betaF[2]*S1*I2)/(S1+I2) + (betaF[3]*S1*I3)/(S1+I3))-d[1]*S1+gamma[1]*I1
     dI1<- ((betaF[1]*S1*I1)/(S1*I1)+(betaF[2]*S1*I2)/(S1+I2) + (betaF[3]*S1*I3)/(S1+I3)) - (d[1]+alphaF[1]+gamma[1])*I1
@@ -106,14 +106,14 @@ threehostpatch <- function(t, state, parameters) {
 }
 
 ### output of times ###
-times <- seq(0, 1000, by = 0.001)
+times <- seq(0, 10, by = 0.1)
 
-out <- as.data.frame(lsoda(y= state, times = times, func = threehostpatch, parms = parameters))
+out <- as.data.frame(lsoda(y= state, times = times, func = threehostpatchF, parms = parameters))
 out$time = NULL
 
 
 par(mar=c(4,4,2,2))
-layout(matrix(1:6,2, 3))
+layout(matrix(1:3,1, 3))
 layout.show(6)
 
 plot(times, out$S1, type='l',  xlab = 'years', main= 'Species 1', bty='n', col="darkgreen")
@@ -125,7 +125,7 @@ lines(times, out$I2, type= 'l', lty=3, col="darkorange3")
 plot(times, out$S3, type= 'l', col="navy", xlab = 'days', ylim= c(0,30), main= 'Species3', bty='n')
 lines(times, out$I3, type= 'l', lty=3, col="navy")
 
-plot(times, out$I1/(out$S1+out$I1), type='l',col="darkgreen", main="Prevalence", bty='n')
+plot(times, out$I1/(out$S1+out$I1), type='l',col="darkgreen", main="Prevalence", bty='n', ylim=c(0,1))
 lines(times, out$I2/(out$S2+out$I2), type= 'l', lty=3, col="darkorange3")
-lines(times,out$I3/(out$S3+out$I3), type='l', col= "navy")
+lines(times,out$I3/(out$S3+out$I3), type='l', lty=3, col= "navy")
 
