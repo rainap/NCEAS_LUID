@@ -2,7 +2,7 @@
 # BASIC CODE FOR A GENERALIST PATHOGEN; 3 HOSTS
 ########
 rm(list = ls())
-
+library(deSolve)
 ##  Set range of pathogen Ros
 Amax = 100 # maximum number of unique patches
 Area=numeric(Amax)
@@ -40,7 +40,7 @@ betaD = numeric(Hosts) #density dependent transmission; each host has a unique r
 betaF = numeric(Hosts) #frequency dependent transmission; each host has a unique rate that is fixed
 r = numeric(Hosts) #reproduction rates for each host are dependent of mass (births - deaths)
 d = numeric(Hosts) #death rates for each host; dependent on mass
-b = numeric(Hosts)
+b = numeric(Hosts) #birth rates r+d
 alphaF = numeric(Hosts) #disease induced mortality for Frequency dependent pathogens
 alphaD = numeric(Hosts) #disease induced mortality for density dependent pathogens
 delta = numeric(Hosts)
@@ -52,11 +52,11 @@ for (i in 1:Hosts) {
   Dens[i]=16.2*Mass[i]^-0.70
   betaD[i]=0.045*md*Mass[i]^0.44 
   r[i]=0.6*Mass[i]^-0.26  # births - deaths
-  d[i]=0.4*Mass[i]^-0.27 #  
+  d[i]=0.4*Mass[i]^-0.27 # deaths
   b[i]=r[i]+d[i]
   delta[i] = (r[i]/Dens[i])  #real way to represent b-d/N*
   alphaD[i]= d[i]*md
-  gamma[i]=0.1*Mass[i]^-0.27
+  gamma[i]=0.05*Mass[i]^-0.27 #
 }
 
 #  Frequency-dependent transmission
@@ -95,35 +95,37 @@ parameters <- c(betaF,
 
 threehostpatch <- function(t, state, parameters) {
   with(as.list(c(state, parameters)), {
-    dS1<- b[1]*(S1+I1)-(betaF[1]*S1*I1+betaF[2]*S1*I2+betaF[3]*S1*I3)-d[1]*S1+ gamma[1]*I1
-    dI1<- (betaF[1]*S1*I1+betaF[2]*S1*I2+betaF[3]*S1*I3) - (d[1]+alphaF[1])*I1- gamma[1]*I1
-    dS2<- b[2]*(S2+I2)-(betaF[1]*S2*I1+betaF[2]*S2*I2+betaF[3]*S2*I3)-d[1]*S1+ gamma[2]*I2
-    dI2<- (betaF[1]*S2*I1+betaF[2]*S2*I2+betaF[3]*S2*I3) - (d[2]+alphaF[2])*I2- gamma[2]*I2
-    dS3<- b[3]*(S3+I3)-(betaF[1]*S3*I1+betaF[2]*S3*I2+betaF[3]*S3*I3)-d[3]*S1+ gamma[3]*I3
-    dI3<- (betaF[1]*S3*I1+betaF[2]*S3*I2+betaF[3]*S3*I3) - (d[3]+alphaF[3])*I3- gamma[3]*I3
+    dS1 <- b[1]*(S1+I1)-((betaF[1]*S1*I1)/(S1*I1)+(betaF[2]*S1*I2)/(S1+I2) + (betaF[3]*S1*I3)/(S1+I3))-d[1]*S1+gamma[1]*I1
+    dI1<- ((betaF[1]*S1*I1)/(S1*I1)+(betaF[2]*S1*I2)/(S1+I2) + (betaF[3]*S1*I3)/(S1+I3)) - (d[1]+alphaF[1]+gamma[1])*I1
+    dS2 <- b[2]*(S2+I2)-((betaF[1]*S2*I1)/(S2*I1)+(betaF[2]*S2*I2)/(S2+I2)+(betaF[3]*S2*I3)/(S2+I3))-d[2]*S2+gamma[2]*I2
+    dI2<- ((betaF[1]*S2*I1)/(S2+I1)+(betaF[2]*S2*I2)/(S2+I2)+ (betaF[3]*S2*I3))/(S2+I3) - (d[2]+alphaF[2]+gamma[2])*I2
+    dS3 <- b[3]*(S3+I3)-((betaF[1]*S3*I1)/(S3+I1)+(betaF[2]*S3*I2)/(S3+I2)+(betaF[3]*S3*I3)/(S3+I3))-d[3]*S3+gamma[3]*I3
+    dI3<- ((betaF[1]*S3*I1)/(S3+I1)+(betaF[2]*S3*I2)/(S3+I2)+ (betaF[3]*S3*I3)/(S3+I3)) - (d[3]+alphaF[3]+gamma[3])*I3
     list(c(dS1, dI1, dS2, dI2, dS3, dI3))
-  }) 
+  })
 }
 
 ### output of times ###
-times <- seq(0, 365, by = 0.01)
+times <- seq(0, 1000, by = 0.001)
 
 out <- as.data.frame(lsoda(y= state, times = times, func = threehostpatch, parms = parameters))
 out$time = NULL
 
-#GRAPHS
 
 par(mar=c(4,4,2,2))
-layout(matrix(1:6,2,3))
+layout(matrix(1:6,2, 3))
 layout.show(6)
 
-plot(times, out$S1, type= 'l', col="peru", 
-      xlab = 'days',main= 'Species 1', bty="n", xlim=c(0,10))
-lines(times, out$I1, type= 'l', col="peru", lty=2)
-plot(times, out$S2, type= 'l', col="darkgreen", xlim=c(0,10), 
-     xlab = 'days',main= 'Species 2', bty="n")
-lines(times, out$I2, type= 'l', col="darkgreen", lty=2)
-plot(times, out$S3, type= 'l', col="navy", 
-     xlab = 'days',main= 'Species 3', bty="n")
-lines(times, out$I3, type= 'l', col="navy", lty=2)
-lines(times, out$S3+out$I3, pch=20, col="navy")
+plot(times, out$S1, type='l',  xlab = 'years', main= 'Species 1', bty='n', col="darkgreen")
+lines(times, out$I1, type='l', lty= 3, col="darkgreen")
+
+plot(times, out$S2, type= 'l', lty=1, col="peru", xlab = 'days', ylim= c(0,30), main= 'Species2', bty='n')
+lines(times, out$I2, type= 'l', lty=3, col="darkorange3")
+
+plot(times, out$S3, type= 'l', col="navy", xlab = 'days', ylim= c(0,30), main= 'Species3', bty='n')
+lines(times, out$I3, type= 'l', lty=3, col="navy")
+
+plot(times, out$I1/(out$S1+out$I1), type='l',col="darkgreen", main="Prevalence", bty='n')
+lines(times, out$I2/(out$S2+out$I2), type= 'l', lty=3, col="darkorange3")
+lines(times,out$I3/(out$S3+out$I3), type='l', col= "navy")
+
