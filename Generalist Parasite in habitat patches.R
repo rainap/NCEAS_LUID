@@ -1,5 +1,5 @@
 ######### 
-# bASIC CODE FOR A GENERALIST PATHOGEN; 3 HOSTS
+# BASIC CODE FOR A GENERALIST PATHOGEN; 3 HOSTS
 ########
 rm(list = ls())
 
