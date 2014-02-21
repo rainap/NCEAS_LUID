@@ -78,7 +78,6 @@ plot(Mass, r, main="birth, death, delta by body size",
      log='x',  bty="n", ylim=c(0,1.2), xlab='',
      las=1, pch=20, xlim=c(0.1,50), col="red")
 points(Mass, d, pch=20)
-points(Mass, delta,log='x', pch=20, col="navy")
 
 plot(Mass, Dens, log='x',  bty="n", 
      las=1, pch=20, xlim=c(0.1,50), ylab='density (individuals/km2)')
@@ -107,12 +106,12 @@ for(i in 1:Amax)   {
 DensGS = matrix(NA, ncol = Amax, nrow = Hosts)
 for(i in 1:50)   {
   for(j in 1:Hosts) {
-    if (Gen[j]==1) DensGS[j,i]=Dens[j] else DensGS[j,i]=Dens[j]*0.5
+    if (Gen[j]==1) DensGS[j,i]=Dens[j] else DensGS[j,i]=Dens[j]*0.8
   }
 }
 for(i in 51:100)   {
   for(j in 1:Hosts) {
-    if (Gen[j]==1) DensGS[j,i]=Dens[j]*0.5 else DensGS[j,i]=Dens[j]
+    if (Gen[j]==1) DensGS[j,i]=Dens[j]*0.8 else DensGS[j,i]=Dens[j]
   }
 }
 
@@ -126,7 +125,7 @@ for(i in 1:Amax)   {
 
 #carrying capacity
 DisPatchGS= matrix(NA, ncol = Amax, nrow = Hosts) #Number of Host individuals in a given species+patch; carrycapacity for patch
-for(i in Amax)   {
+for(i in 1:Amax)   {
   SpecRich[i]=0
   for(j in 1:Hosts) {
     DisPatchGS[j,i]=((r[j]+d[j]+alphaF[j]-BetaF[j])/deltaGS[j,i])*Area[i]
