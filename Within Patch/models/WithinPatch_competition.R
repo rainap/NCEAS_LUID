@@ -141,8 +141,14 @@ for(i in 1:Amax)   {
 test=matrix(NA, ncol = 2, nrow = Hosts)  
 for (i in 1:Hosts){
   if ((i-1)>0) test[i,1]=(Dens[i]*(1-(Mass[i]-Mass[i-1]))) else test[i,1]=Dens[i]
-  if ((i+1)< 13) test[i,2]=Dens[i]*((1-(Mass[i]-Mass[i-1]))+(1-(Mass[i]-Mass[i+1]))) else test[i,2]=Dens[i]
+  if ((i+1)<13) test[i,2]=(Dens[i]*((1-(Mass[i]-Mass[i-1]))+(1-(Mass[i]-Mass[i+1])))) else test[i,2]=Dens[i]
 }
+test[,1]
+
+i=12
+if ((i+1)<13) test[i,2]=(Dens[i]*((1-(Mass[i]-Mass[i-1]))+(1-(Mass[i]-Mass[i+1])))) else test[i,2]=Dens[i]
+test[i,2]
+
 1-(abs(Mass[1]+Mass[(1+1)])/(Mass[1]*Mass[(1+1)]))
 test[,1]
 i=3
