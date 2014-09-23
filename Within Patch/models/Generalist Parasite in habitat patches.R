@@ -76,61 +76,8 @@ for(i in 1:Amax)   {
     if (PatchK[j,i]>1) SpecAcc[i]=SpecAcc[i]+1 else SpecAcc[i]
   }
 }  
+ 
 
-#ODEs
-# library(deSolve)
-# state<- c(S1=PatchK[1,50],
-#           I1=1,
-#           S2=PatchK[2,50],
-#           I2=1,
-#           S3=PatchK[3,50],
-#           I3=1 
-#             )
-# parameters <- c(betaF,
-#                 b,
-#                 d,
-#                 alphaF,
-#                 gamma)
-# 
-# threehostpatchF <- function(t, state, parameters) {
-#   with(as.list(c(state, parameters)), {
-#     dS1 <- b[1]*(S1+I1)-(betaF[1]*S1*I1)/(S1*I1)+(betaF[2]*S1*I2)/(S1+I2) + (betaF[3]*S1*I3)/(S1+I3))-d[1]*S1+gamma[1]*I1
-#     dI1<- ((betaF[1]*S1*I1)/(S1+I1+)+(betaF[2]*S1*I2)/(S1+I2) + (betaF[3]*S1*I3)/(S1+I3)) - (d[1]+alphaF[1]+gamma[1])*I1
-#     dS2 <- b[2]*(S2+I2)-((betaF[1]*S2*I1)/(S2*I1)+(betaF[2]*S2*I2)/(S2+I2)+(betaF[3]*S2*I3)/(S2+I3))-d[2]*S2+gamma[2]*I2
-#     dI2<- ((betaF[1]*S2*I1)/(S2+I1)+(betaF[2]*S2*I2)/(S2+I2)+ (betaF[3]*S2*I3))/(S2+I3) - (d[2]+alphaF[2]+gamma[2])*I2
-#     dS3 <- b[3]*(S3+I3)-((betaF[1]*S3*I1)/(S3+I1)+(betaF[2]*S3*I2)/(S3+I2)+(betaF[3]*S3*I3)/(S3+I3))-d[3]*S3+gamma[3]*I3
-#     dI3<- ((betaF[1]*S3*I1)/(S3+I1)+(betaF[2]*S3*I2)/(S3+I2)+ (betaF[3]*S3*I3)/(S3+I3)) - (d[3]+alphaF[3]+gamma[3])*I3
-#     list(c(dS1, dI1, dS2, dI2, dS3, dI3))
-#   })
-# }
-# 
-# ### output of times ###
-# times <- seq(0, 10, by = 0.1)
-# 
-# out <- as.data.frame(lsoda(y= state, times = times, func = threehostpatchF, parms = parameters))
-# out$time = NULL
-# 
-# 
-# par(mar=c(4,4,2,2))
-# layout(matrix(1:3,1, 3))
-# layout.show(6)
-# 
-# plot(times, out$S1, type='l',  xlab = 'years', main= 'Species 1', bty='n', col="darkgreen")
-# lines(times, out$I1, type='l', lty= 3, col="darkgreen")
-# 
-# plot(times, out$S2, type= 'l', lty=1, col="peru", xlab = 'days', ylim= c(0,30), main= 'Species2', bty='n')
-# lines(times, out$I2, type= 'l', lty=3, col="darkorange3")
-# 
-# plot(times, out$S3, type= 'l', col="navy", xlab = 'days', ylim= c(0,30), main= 'Species3', bty='n')
-# lines(times, out$I3, type= 'l', lty=3, col="navy")
-# 
-# plot(times, out$I1/(out$S1+out$I1), type='l',col="darkgreen", main="Prevalence", bty='n', ylim=c(0,1))
-# lines(times, out$I2/(out$S2+out$I2), type= 'l', lty=3, col="darkorange3")
-# lines(times,out$I3/(out$S3+out$I3), type='l', lty=3, col= "navy")
-# 
-
-
-Area=5
 ####
 library(deSolve)
 state<- c(S1=if (Dens[1]*Area>1) Dens[1]*Area else 0,
@@ -161,7 +108,7 @@ threehostpatchD <- function(t, state, parameters) {
 }
 
 ### output of times ###
-times <- seq(0, 100, by = 0.01)
+times <- seq(0, 100, by = 1)
 
 out <- as.data.frame(lsoda(y= state, times = times, func = threehostpatchD, parms = parameters))
 out$time = NULL
@@ -213,8 +160,8 @@ for(i in (Amax/2):(Amax*3/4)) {
 for(i in (Amax*3/4):(Amax-1)) { 
   Area[i+1]=Area[i]+20
 }
-Area=Area
-times <- seq(0, 50, by = 0.1)
+
+times <- seq(0, 50, by = 1)
 # Species1 #
 storeS1 = {};
 storeI1 = {};
@@ -225,12 +172,12 @@ storeI3 = {};
 for (i in Area) {
   parameters["Area"] = i;
   out <- as.data.frame(ode(y= state, times = times, func = threehostpatchD, parms = parameters));
-  storeS1 = c(storeS1, out$S1[100]);
-  storeI1 = c(storeI1, out$I1[100]);
-  storeS2 = c(storeS2, out$S2[100]);
-  storeI2 = c(storeI2, out$I2[100]);
-  storeS3 = c(storeS3, out$S3[100]);
-  storeI3 = c(storeI3, out$I3[100]);
+  storeS1 = c(storeS1, out$S1[50]);
+  storeI1 = c(storeI1, out$I1[50]);
+  storeS2 = c(storeS2, out$S2[50]);
+  storeI2 = c(storeI2, out$I2[50]);
+  storeS3 = c(storeS3, out$S3[50]);
+  storeI3 = c(storeI3, out$I3[50]);
 }
 
 plot(Area, (storeS1+storeI1)/(Area*Dens[1]), type = "l", 
