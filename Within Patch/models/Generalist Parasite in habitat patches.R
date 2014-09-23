@@ -130,7 +130,7 @@ for(i in 1:Amax)   {
 # 
 
 
-Area=1
+Area=5
 ####
 library(deSolve)
 state<- c(S1=if (Dens[1]*Area>1) Dens[1]*Area else 0,
@@ -161,7 +161,7 @@ threehostpatchD <- function(t, state, parameters) {
 }
 
 ### output of times ###
-times <- seq(0, 10, by = 0.5)
+times <- seq(0, 100, by = 0.01)
 
 out <- as.data.frame(lsoda(y= state, times = times, func = threehostpatchD, parms = parameters))
 out$time = NULL
@@ -177,12 +177,12 @@ lines(times, out$I1, type='l', lty= 3, col="darkgreen")
 legend("topright", c("susceptibles", "infected"), col="darkgreen", lty= c(1,3), bty='n')
 
 plot(times, out$S2, type= 'l', lty=1, col="peru", xlab = 'days', 
-     ylim= c(0,15), main= 'Species2', bty='n',
+      main= 'Species2', bty='n',
      ylab= 'individuals')
 lines(times, out$I2, type= 'l', lty=3, col="peru")
 legend("topright", c("susceptibles", "infected"), col="peru", lty= c(1,3), bty='n')
 
-plot(times, out$S3, type= 'l', col="navy", xlab = 'days', ylim= c(0,4), main= 'Species3', bty='n')
+plot(times, out$S3, type= 'l', col="navy", xlab = 'days',  main= 'Species3', bty='n')
 lines(times, out$I3, type= 'l', lty=3, col="navy")
 abline(h=PatchK[3,50])
 legend("topright", c("susceptibles", "infected"), col="navy", lty= c(1,3), bty='n')
@@ -214,7 +214,7 @@ for(i in (Amax*3/4):(Amax-1)) {
   Area[i+1]=Area[i]+20
 }
 Area=Area
-times <- seq(0, 10, by = 0.1)
+times <- seq(0, 50, by = 0.1)
 # Species1 #
 storeS1 = {};
 storeI1 = {};
@@ -235,7 +235,7 @@ for (i in Area) {
 
 plot(Area, (storeS1+storeI1)/(Area*Dens[1]), type = "l", 
      col= "gray40", xlab= "patch size", ylab= "proportion of carrying capacity",
-     ylim=c(0, 1), bty='n', cex=0.4,pch=19)
+     ylim=c(0, 1), bty='n', cex=0.4,pch=19, log='x')
 lines(Area, (storeS2+storeI2)/(Area*Dens[2]), type = "l", 
      col= "navy")
 lines(Area, (storeS3+storeI3)/(Area*Dens[3]), type = "l", 
@@ -244,13 +244,14 @@ legend("topright", c( "sp1", "sp2","sp3"),
        col=c('darkgrey','navy','forestgreen'), 
        lty=1, bty='n') 
 
-plot(Area, storeS1, type = "l", col='grey40', bty='n', ylim=c(0,max(storeS1)))
+plot(Area, storeS1, type = "l", col='grey40', bty='n', 
+     ylim=c(0,900), log='x', ylab='individuals')
 lines(Area,storeS2, col='navy')    
 lines(Area, storeS3, col='forestgreen')
-lines(Area,storeI1, col="darkred")
 
 plot(Area,storeI1/ (storeS1 + storeI1), type= 'l', 
      col="gray40", ylim= c(0, 1.0), ylab='proportion infected', 
-     xlab = 'area', bty='n')
+     xlab = 'area', bty='n', log='x')
 lines(Area,storeI2/(storeS2 + storeI2),  col="navy")
 lines(Area, storeI3/(storeS3 + storeI3), col="forestgreen")
+
