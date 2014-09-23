@@ -129,42 +129,46 @@ for(i in 1:Amax)   {
 # lines(times,out$I3/(out$S3+out$I3), type='l', lty=3, col= "navy")
 # 
 
+
+Area=1
 ####
 library(deSolve)
-state<- c(S1=PatchK[1,50],
+state<- c(S1=if (Dens[1]*Area>1) Dens[1]*Area else 0,
           I1=1,
-          S2=PatchK[2,50],
+          S2=if (Dens[2]*Area>1) Dens[2]*Area else 0,
           I2=0,
-          S3=PatchK[3,50],
+          S3=if (Dens[3]*Area>1) Dens[1]*Area else 0,
           I3=0 
 )
 parameters <- c(betaD,
                 b,
                 d,
                 alphaD,
-                gamma)
+                gamma,
+                Dens,
+                Area)
 
 threehostpatchD <- function(t, state, parameters) {
   with(as.list(c(state, parameters)), {
-  dS1 <- b[1]*(S1+I1)*(1-((S1+I1)/PatchK[1,50])) - ((betaD[1]*S1*I1) + (betaD[2]*S1*I2) + (betaD[3]*S1*I3)) - d[1]*S1 + gamma[1]*I1
+  dS1 <- b[1]*(S1+I1)*(1-((S1+I1)/(Dens[1]*Area))) - ((betaD[1]*S1*I1) + (betaD[2]*S1*I2) + (betaD[3]*S1*I3)) - d[1]*S1 + gamma[1]*I1
   dI1 <- ((betaD[1]*S1*I1) + (betaD[2]*S1*I2) + (betaD[3]*S1*I3)) - (d[1]+alphaD[1]+gamma[1])*I1
-  dS2 <- b[2]*(S2+I2)*(1-((S2+I2)/PatchK[2,50])) - ((betaD[1]*S2*I1) + (betaD[2]*S2*I2) + (betaD[3]*S2*I3)) - d[2]*S2 + gamma[2]*I2
+  dS2 <- b[2]*(S2+I2)*(1-((S2+I2)/(Dens[2]*Area))) - ((betaD[1]*S2*I1) + (betaD[2]*S2*I2) + (betaD[3]*S2*I3)) - d[2]*S2 + gamma[2]*I2
   dI2 <- ((betaD[1]*S2*I1) + (betaD[2]*S2*I2) + (betaD[3]*S2*I3)) - (d[2]+alphaD[2]+gamma[2])*I2
-  dS3 <- b[3]*(S3+I3)*(1-((S3+I3)/PatchK[1,50])) - ((betaD[1]*S3*I1) +  (betaD[2]*S3*I2) + (betaD[3]*S3*I3)) - d[3]*S3 + gamma[3]*I3
+  dS3 <- b[3]*(S3+I3)*(1-((S3+I3)/(Dens[1]*Area))) - ((betaD[1]*S3*I1) +  (betaD[2]*S3*I2) + (betaD[3]*S3*I3)) - d[3]*S3 + gamma[3]*I3
   dI3 <- ((betaD[1]*S3*I1) +  (betaD[2]*S3*I2) + (betaD[3]*S3*I3)) - (d[3]+alphaD[3]+gamma[3])*I3
   list(c(dS1, dI1, dS2, dI2, dS3, dI3))
   })
 }
 
 ### output of times ###
-times <- seq(0, 40, by = 0.1)
+times <- seq(0, 100, by = 0.1)
 
 out <- as.data.frame(lsoda(y= state, times = times, func = threehostpatchD, parms = parameters))
 out$time = NULL
 
-par(mar=c(4,4,2,2))
-layout(matrix(1:1,1, 1))
-layout.show(6)
+# par(mar=c(4,4,2,2))
+# layout(matrix(1:1,1, 1))
+# layout.show(6)
 
 plot(times, out$S1, type='l',  xlab = 'years', main= 'Species 1', bty='n', col="darkgreen", 
      ylim= c(0,PatchK[1,50]), ylab= 'individuals')
@@ -191,4 +195,105 @@ legend("topright", c("sp1", "sp2", "sp3"), bty='n', lty=1, col=c("darkgreen","da
 
 
 #########
+#code to find equilibrium in each patch size
+### Calculating state variables at time = 40 ####
+Area[1]=1.0
+for(i in 1: (Amax/10) ) { 
+  Area[i+1]=Area[i]+1
+}
+for(i in (Amax/10):(Amax/4)) { 
+  Area[i+1]=Area[i]+2
+}
+for(i in (Amax/4):(Amax/2)) { 
+  Area[i+1]=Area[i]+5
+}    
+for(i in (Amax/2):(Amax*3/4)) { 
+  Area[i+1]=Area[i]+10
+}
+for(i in (Amax*3/4):(Amax-1)) { 
+  Area[i+1]=Area[i]+20
+}
+Area=Area
+times <- seq(0, 100, by = 0.1)
+# Species1 #
+storeS1 = {};
+for (i in Area) {
+  parameters["Area"] = i;
+  out <- as.data.frame(ode(y= state, times = c(0,40), func = threehostpatchD, parms = parameters));
+  storeS1 = c(storeS1, out$S1[2]);
+}
+
+plot(Area, storeS1, type = "p", pch=20, 
+     col= "darkgreen", ylab='individuals', bty='n')
+
+storeI1 = {};
+for (i in Area) {
+  parameters["Area"] = i;
+  out <- as.data.frame(ode(y= state, times = c(0,40), func = threehostpatchD, parms = parameters));
+  storeI1 = c(storeI1, out$I1[2]);
+}
+plot(Area, storeS1, type = "p", 
+     col= "black", xlab= "patch size", ylab= "Individuals",
+     ylim=c(0, max(storeS1)*1.4), bty='n', cex=0.4,pch=19)
+points(Area, storeI1,  col= "red", cex=0.4,pch=19)
+legend("topright", c( "Susceptible", "Infected"), 
+       col = c("black", "red"), bty = "n", pch=19)
+
+plot(Area,storeI1/ (storeS1 + storeI1), type= 'l', 
+     col="darkred", ylim= c(0, 1.0), ylab='proportion infected', 
+     xlab = 'area', bty='n')
+
+storeS2 = {};
+for (i in Area) {
+  parameters["Area"] = i;
+  out <- as.data.frame(ode(y= state, times = c(0,40), func = threehostpatchD, parms = parameters));
+  storeS2 = c(storeS2, out$S2[2]);
+}
+
+plot(Area, storeS2, type = "p", pch=20, 
+     col= "darkgreen", ylab='individuals', bty='n')
+
+storeI2 = {};
+for (i in Area) {
+  parameters["Area"] = i;
+  out <- as.data.frame(ode(y= state, times = c(0,40), func = threehostpatchD, parms = parameters));
+  storeI2 = c(storeI2, out$I2[2]);
+}
+plot(Area, storeS2, type = "p", 
+     col= "black", xlab= "patch size", ylab= "Individuals",
+     ylim=c(0, max(storeS2)*1.4), bty='n', cex=0.4,pch=19)
+points(Area, storeI2,  col= "red", cex=0.4,pch=19)
+legend("topright", c( "Susceptible", "Infected"), 
+       col = c("black", "red"), bty = "n", pch=19)
+
+plot(Area,storeI2/ (storeS2 + storeI2), type= 'l', 
+     col="darkred", ylim= c(0, 1.0), ylab='proportion infected', 
+     xlab = 'area', bty='n')
+
+storeS3 = {};
+for (i in Area) {
+  parameters["Area"] = i;
+  out <- as.data.frame(ode(y= state, times = c(0,40), func = threehostpatchD, parms = parameters));
+  storeS3 = c(storeS3, out$S3[2]);
+}
+
+plot(Area, storeS3, type = "p", pch=20, 
+     col= "darkgreen", ylab='individuals', bty='n')
+
+storeI3 = {};
+for (i in Area) {
+  parameters["Area"] = i;
+  out <- as.data.frame(ode(y= state, times = c(0,40), func = threehostpatchD, parms = parameters));
+  storeI3 = c(storeI3, out$I3[2]);
+}
+plot(Area, storeS3, type = "p", 
+     col= "black", xlab= "patch size", ylab= "Individuals",
+     ylim=c(0, max(storeS3)*1.4), bty='n', cex=0.4,pch=19)
+points(Area, storeI3,  col= "red", cex=0.4,pch=19)
+legend("topright", c( "Susceptible", "Infected"), 
+       col = c("black", "red"), bty = "n", pch=19)
+
+plot(Area,storeI3/ (storeS3 + storeI3), type= 'l', 
+     col="darkred", ylim= c(0, 1.0), ylab='proportion infected', 
+     xlab = 'area', bty='n')
 
