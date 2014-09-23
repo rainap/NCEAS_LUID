@@ -32,7 +32,7 @@ Hosts=3  #number of host species
 
 Mass=numeric(Hosts)
 # Set a range of body masses in Kg
-Mass[1:3]=c(0.1, 10.0,100.0)
+Mass[1:3]=c(0.1, 1.0,10.0)
 
 #Empty vectors for parameters
 Dens = numeric(Hosts) #assume each host has a unique density that is fixed
@@ -161,7 +161,7 @@ threehostpatchD <- function(t, state, parameters) {
 }
 
 ### output of times ###
-times <- seq(0, 100, by = 0.1)
+times <- seq(0, 10, by = 0.5)
 
 out <- as.data.frame(lsoda(y= state, times = times, func = threehostpatchD, parms = parameters))
 out$time = NULL
@@ -171,7 +171,7 @@ out$time = NULL
 # layout.show(6)
 
 plot(times, out$S1, type='l',  xlab = 'years', main= 'Species 1', bty='n', col="darkgreen", 
-     ylim= c(0,PatchK[1,50]), ylab= 'individuals')
+     ylim= c(0,Dens[1]*Area), ylab= 'individuals')
 lines(times, out$I1, type='l', lty= 3, col="darkgreen")
 #lines(times, out$S1+ out$I1, col= 'black')
 legend("topright", c("susceptibles", "infected"), col="darkgreen", lty= c(1,3), bty='n')
@@ -214,86 +214,43 @@ for(i in (Amax*3/4):(Amax-1)) {
   Area[i+1]=Area[i]+20
 }
 Area=Area
-times <- seq(0, 100, by = 0.1)
+times <- seq(0, 10, by = 0.1)
 # Species1 #
 storeS1 = {};
-for (i in Area) {
-  parameters["Area"] = i;
-  out <- as.data.frame(ode(y= state, times = c(0,40), func = threehostpatchD, parms = parameters));
-  storeS1 = c(storeS1, out$S1[2]);
-}
-
-plot(Area, storeS1, type = "p", pch=20, 
-     col= "darkgreen", ylab='individuals', bty='n')
-
 storeI1 = {};
-for (i in Area) {
-  parameters["Area"] = i;
-  out <- as.data.frame(ode(y= state, times = c(0,40), func = threehostpatchD, parms = parameters));
-  storeI1 = c(storeI1, out$I1[2]);
-}
-plot(Area, storeS1, type = "p", 
-     col= "black", xlab= "patch size", ylab= "Individuals",
-     ylim=c(0, max(storeS1)*1.4), bty='n', cex=0.4,pch=19)
-points(Area, storeI1,  col= "red", cex=0.4,pch=19)
-legend("topright", c( "Susceptible", "Infected"), 
-       col = c("black", "red"), bty = "n", pch=19)
-
-plot(Area,storeI1/ (storeS1 + storeI1), type= 'l', 
-     col="darkred", ylim= c(0, 1.0), ylab='proportion infected', 
-     xlab = 'area', bty='n')
-
 storeS2 = {};
-for (i in Area) {
-  parameters["Area"] = i;
-  out <- as.data.frame(ode(y= state, times = c(0,40), func = threehostpatchD, parms = parameters));
-  storeS2 = c(storeS2, out$S2[2]);
-}
-
-plot(Area, storeS2, type = "p", pch=20, 
-     col= "darkgreen", ylab='individuals', bty='n')
-
 storeI2 = {};
-for (i in Area) {
-  parameters["Area"] = i;
-  out <- as.data.frame(ode(y= state, times = c(0,40), func = threehostpatchD, parms = parameters));
-  storeI2 = c(storeI2, out$I2[2]);
-}
-plot(Area, storeS2, type = "p", 
-     col= "black", xlab= "patch size", ylab= "Individuals",
-     ylim=c(0, max(storeS2)*1.4), bty='n', cex=0.4,pch=19)
-points(Area, storeI2,  col= "red", cex=0.4,pch=19)
-legend("topright", c( "Susceptible", "Infected"), 
-       col = c("black", "red"), bty = "n", pch=19)
-
-plot(Area,storeI2/ (storeS2 + storeI2), type= 'l', 
-     col="darkred", ylim= c(0, 1.0), ylab='proportion infected', 
-     xlab = 'area', bty='n')
-
 storeS3 = {};
-for (i in Area) {
-  parameters["Area"] = i;
-  out <- as.data.frame(ode(y= state, times = c(0,40), func = threehostpatchD, parms = parameters));
-  storeS3 = c(storeS3, out$S3[2]);
-}
-
-plot(Area, storeS3, type = "p", pch=20, 
-     col= "darkgreen", ylab='individuals', bty='n')
-
 storeI3 = {};
 for (i in Area) {
   parameters["Area"] = i;
-  out <- as.data.frame(ode(y= state, times = c(0,40), func = threehostpatchD, parms = parameters));
-  storeI3 = c(storeI3, out$I3[2]);
+  out <- as.data.frame(ode(y= state, times = times, func = threehostpatchD, parms = parameters));
+  storeS1 = c(storeS1, out$S1[100]);
+  storeI1 = c(storeI1, out$I1[100]);
+  storeS2 = c(storeS2, out$S2[100]);
+  storeI2 = c(storeI2, out$I2[100]);
+  storeS3 = c(storeS3, out$S3[100]);
+  storeI3 = c(storeI3, out$I3[100]);
 }
-plot(Area, storeS3, type = "p", 
-     col= "black", xlab= "patch size", ylab= "Individuals",
-     ylim=c(0, max(storeS3)*1.4), bty='n', cex=0.4,pch=19)
-points(Area, storeI3,  col= "red", cex=0.4,pch=19)
-legend("topright", c( "Susceptible", "Infected"), 
-       col = c("black", "red"), bty = "n", pch=19)
 
-plot(Area,storeI3/ (storeS3 + storeI3), type= 'l', 
-     col="darkred", ylim= c(0, 1.0), ylab='proportion infected', 
+plot(Area, (storeS1+storeI1)/(Area*Dens[1]), type = "l", 
+     col= "gray40", xlab= "patch size", ylab= "proportion of carrying capacity",
+     ylim=c(0, 1), bty='n', cex=0.4,pch=19)
+lines(Area, (storeS2+storeI2)/(Area*Dens[2]), type = "l", 
+     col= "navy")
+lines(Area, (storeS3+storeI3)/(Area*Dens[3]), type = "l", 
+      col= "forestgreen")
+legend("topright", c( "sp1", "sp2","sp3"),
+       col=c('darkgrey','navy','forestgreen'), 
+       lty=1, bty='n') 
+
+plot(Area, storeS1, type = "l", col='grey40', bty='n', ylim=c(0,max(storeS1)))
+lines(Area,storeS2, col='navy')    
+lines(Area, storeS3, col='forestgreen')
+lines(Area,storeI1, col="darkred")
+
+plot(Area,storeI1/ (storeS1 + storeI1), type= 'l', 
+     col="gray40", ylim= c(0, 1.0), ylab='proportion infected', 
      xlab = 'area', bty='n')
-
+lines(Area,storeI2/(storeS2 + storeI2),  col="navy")
+lines(Area, storeI3/(storeS3 + storeI3), col="forestgreen")
