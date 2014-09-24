@@ -145,44 +145,30 @@ w=seq(0,1, by=0.1)
 
 times <- seq(0, 50, by = 1)
 
+storeS1 = {};
+storeI1 = {};
+storeS2 = {};
+storeI2 = {};
+storeS3 = {};
+storeI3 = {};
+plotArea = {};
+plotw= {};
 
-# Species1 #
-storeS1 = as.data.frame(matrix(NA,length(w),length(Area)));
-names(storeS1)=Area
-storeI1 = as.data.frame(matrix(NA,length(w),length(Area)));
-names(storeI1)=Area
-storeS2 = as.data.frame(matrix(NA,length(w),length(Area)));
-names(storeS2)=Area
-storeI2 = as.data.frame(matrix(NA,length(w),length(Area)));
-names(storeI2)=Area
-storeS3 = as.data.frame(matrix(NA,length(w),length(Area)));
-names(storeS3)=Area
-storeI3 = as.data.frame(matrix(NA,length(w),length(Area)));
-names(storeI3)=Area
-
-for (i in w) {
-  parameters["w"] = i;
-  for (j in Area){
-    parameters["Area"] = j;
+for (i in Area) {
+  parameters["Area"] = i;
+  for (j in w){
+    parameters["w"] = j;
     out <- as.data.frame(ode(y= state, times = times, func = threehostpatchD, parms = parameters, method="ode45"));
-    storeS1[match(i,w),match(j,Area)] = out$S1[length(times)];
-    storeI1[match(i,w),match(j,Area)] = out$I1[length(times)];
-    storeS2[match(i,w),match(j,Area)] = out$S2[length(times)];
-    storeI2[match(i,w),match(j,Area)] = out$I2[length(times)];
-    storeS3[match(i,w),match(j,Area)] = out$S3[length(times)];
-    storeI3[match(i,w),match(j,Area)] = out$S3[length(times)];
+    storeS1 = c(storeS1, out$S1[length(times)]);
+    storeI1 = c(storeI1, out$I1[length(times)]);
+    storeS2 = c(storeS2, out$S2[length(times)]);
+    storeI2 = c(storeI2, out$I2[length(times)]);
+    storeS3 = c(storeS3, out$S3[length(times)]);
+    storeI3 = c(storeI3, out$I3[length(times)]);
+    plotArea = c(plotArea, i)
+    plotw= c(plotw, j)
   }
 }
-
-newstoreS1<-as.data.frame(matrix(NA,length(w)*length(Area),1))
-newstoreS1$Area<-rep.int(Area,length(w))
-newstoreS1$w<- c(rep.int(w[1],length(Area)),rep.int(w[2],length(Area)),rep.int(w[3],length(Area)),
-                 rep.int(w[4],length(Area)),rep.int(w[5],length(Area)),rep.int(w[6],length(Area)),
-                 rep.int(w[7],length(Area)),rep.int(w[8],length(Area)),rep.int(w[9],length(Area)),
-                 rep.int(w[10],length(Area)),rep.int(w[11],length(Area)))
-newstoreS1$S1<-c(storeS1[1,],storeS1[2,],storeS1[3,],storeS1[4,],storeS1[5,],
-                 storeS1[6,],storeS1[7,],storeS1[8,],storeS1[9,],storeS1[10,],
-                 storeS1[11,])
 
 
 plot(w, storeS1+storeI1, type='p',  col= "gray40", pch=20, cex=0.5,
