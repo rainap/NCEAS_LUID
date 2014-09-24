@@ -174,6 +174,17 @@ for (i in w) {
   }
 }
 
+newstoreS1<-as.data.frame(matrix(NA,length(w)*length(Area),1))
+newstoreS1$Area<-rep.int(Area,length(w))
+newstoreS1$w<- c(rep.int(w[1],length(Area)),rep.int(w[2],length(Area)),rep.int(w[3],length(Area)),
+                 rep.int(w[4],length(Area)),rep.int(w[5],length(Area)),rep.int(w[6],length(Area)),
+                 rep.int(w[7],length(Area)),rep.int(w[8],length(Area)),rep.int(w[9],length(Area)),
+                 rep.int(w[10],length(Area)),rep.int(w[11],length(Area)))
+newstoreS1$S1<-c(storeS1[1,],storeS1[2,],storeS1[3,],storeS1[4,],storeS1[5,],
+                 storeS1[6,],storeS1[7,],storeS1[8,],storeS1[9,],storeS1[10,],
+                 storeS1[11,])
+
+
 plot(w, storeS1+storeI1, type='p',  col= "gray40", pch=20, cex=0.5,
      bty='n', ylim=c(0, max(storeS1+storeI1)), 
      ylab='population', xlab="between host probability of transmission",
