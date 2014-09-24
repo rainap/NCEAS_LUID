@@ -7,6 +7,7 @@ rm(list = ls())
 #Libraries
 library(deSolve)
 library(lattice)
+library(rgl)
 
 #Hosts
 Hosts=3  #number of host species
@@ -139,27 +140,33 @@ for(i in (Amax/2):(Amax*3/4)) {
 for(i in (Amax*3/4):(Amax-1)) { 
   Area[i+1]=Area[i]+20
 }
-w=seq(0,1, by=0.02)
-times <- seq(0, 50, by = 0.01)
+w=seq(0,1, by=0.1)
+times <- seq(0, 50, by = 1)
 # Species1 #
-storeS1 = {};
-storeI1 = {};
-storeS2 = {};
-storeI2 = {};
-storeS3 = {};
-storeI3 = {};
+storeS1 = as.data.frame(matrix(NA,length(w),length(Area)));
+names(storeS1)=Area
+storeI1 = as.data.frame(matrix(NA,length(w),length(Area)));
+names(storeI1)=Area
+storeS2 = as.data.frame(matrix(NA,length(w),length(Area)));
+names(storeS2)=Area
+storeI2 = as.data.frame(matrix(NA,length(w),length(Area)));
+names(storeI2)=Area
+storeS3 = as.data.frame(matrix(NA,length(w),length(Area)));
+names(storeS3)=Area
+storeI3 = as.data.frame(matrix(NA,length(w),length(Area)));
+names(storeI3)=Area
 
 for (i in Area) {
   parameters["Area"] = i;
   for (j in w){
     parameters["w"] = j;
     out <- as.data.frame(ode(y= state, times = times, func = threehostpatchD, parms = parameters, method="ode45"));
-    storeS1 = c(storeS1, out$S1[length(times)]);
-    storeI1 = c(storeI1, out$I1[length(times)]);
-    storeS2 = c(storeS2, out$S2[length(times)]);
-    storeI2 = c(storeI2, out$I2[length(times)]);
-    storeS3 = c(storeS3, out$S3[length(times)]);
-    storeI3 = c(storeI3, out$I3[length(times)]);
+    storeS1[j,i] = out$S1[length(times)];
+    storeI1[j,i] = out$I1[length(times)];
+    storeS2[j,i] = out$S2[length(times)];
+    storeI2[j,i] = out$I2[length(times)];
+    storeS3[j,i] = out$S3[length(times)];
+    storeI3[j,i] = out$I3[length(times)];
   }
 }
 
