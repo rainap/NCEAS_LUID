@@ -165,12 +165,12 @@ for (i in w) {
   for (j in Area){
     parameters["Area"] = j;
     out <- as.data.frame(ode(y= state, times = times, func = threehostpatchD, parms = parameters, method="ode45"));
-    storeS1[i,j] = out$S1[length(times)];
-    storeI1[i,j] = out$I1[length(times)];
-    storeS2[i,j] = out$S2[length(times)];
-    storeI2[i,j] = out$I2[length(times)];
-    storeS3[i,j] = out$S3[length(times)];
-    storeI3[i,j] = out$I3[length(times)];
+    storeS1[match(i,w),match(j,Area)] = out$S1[length(times)];
+    storeI1[match(i,w),match(j,Area)] = out$I1[length(times)];
+    storeS2[match(i,w),match(j,Area)] = out$S2[length(times)];
+    storeI2[match(i,w),match(j,Area)] = out$I2[length(times)];
+    storeS3[match(i,w),match(j,Area)] = out$S3[length(times)];
+    storeI3[match(i,w),match(j,Area)] = out$S3[length(times)];
   }
 }
 
