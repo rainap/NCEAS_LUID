@@ -183,9 +183,9 @@ legend("topleft",leg.text,lty=rep(1,4),
 
 ## Boring plot of the prevalence data
 plot(Area, PrevF[1,], ylab='Prevalence', xlab='Patch Area(km^2)',
-  col ="red", log = "x", #ylim = c(0.01, 1.0), 
-  main = 'Prevalence in patches of different size',
-  pch=20)
+  col ="red", log = "x", ylim = c(0.01, 1.0), 
+  main = 'FD prev in patches of different size',
+  pch=20,bty='n')
 points(Area, PrevF[2,], col = "blue", pch=20)
 points(Area, PrevF[5,], col = "green", pch=20) 
 points(Area, PrevF[6,], col= "black", pch=20)
@@ -250,8 +250,8 @@ legend("topleft",leg.text,lty=rep(1,4),
 ## Boring plot of the prevalence data
 plot(Area, PrevD[1,], ylab='Prevalence', xlab='Patch Area(km^2)',
      col ="red", log = "x", ylim = c(0,0.1), 
-     main = 'Prevalence in patches of different size',
-     pch=20)
+     main = 'DD Prev in patches of different size',
+     pch=20, bty='n')
 points(Area, PrevD[2,], col = "blue", pch=20)
 points(Area, PrevD[5,], col = "green", pch=20) 
 points(Area, PrevD[6,], col= "black", pch=20)
@@ -268,7 +268,7 @@ legend("topleft",leg.text,lty=rep(1,4),
 
 par(mfrow=c(1,1))
 plot(Area, SpecRich, ylab="Species", xlab="Area of Patch", log="x",
-      main= "Species Area Curve", pch=20)
+      main= "Species Area Curve", pch=20, bty='n')
       
 ## Now add the number of infected together to get at net risk 
 
