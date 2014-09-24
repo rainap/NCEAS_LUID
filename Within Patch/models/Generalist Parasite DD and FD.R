@@ -72,6 +72,7 @@ for(i in 1:Amax)   {
  
 
 ####
+Area=50
 library(deSolve)
 state<- c(S1=if (Dens[1]*Area>1) Dens[1]*Area else 0,
           I1=1,
@@ -103,29 +104,29 @@ threehostpatchD <- function(t, state, parameters) {
 ### output of times ###
 times <- seq(0, 100, by = 1)
 
-out <- as.data.frame(lsoda(y= state, times = times, func = threehostpatchD, parms = parametersD))
+out <- as.data.frame(ode(y= state, times = times, func = threehostpatchD, parms = parametersD, method='ode45'))
 out$time = NULL
 
 # par(mar=c(4,4,2,2))
 # layout(matrix(1:1,1, 1))
 # layout.show(6)
 
-plot(times, out$S1, type='l',  xlab = 'years', main= 'Species 1', bty='n', col="darkgreen", 
-     ylim= c(0,Dens[1]*Area), ylab= 'individuals')
+plot(times, out$S1, type='l',  xlab = 'years', bty='n', col="darkgreen", 
+     ylim= c(0,700), ylab= 'individuals', main='dynamics in a large patch')
 lines(times, out$I1, type='l', lty= 3, col="darkgreen")
 #lines(times, out$S1+ out$I1, col= 'black')
 legend("topright", c("susceptibles", "infected"), col="darkgreen", lty= c(1,3), bty='n')
 
-plot(times, out$S2, type= 'l', lty=1, col="peru", xlab = 'days', 
-      main= 'Species2', bty='n',
+lines(times, out$S2, type= 'l', lty=1, col="peru", xlab = 'days', 
+      main= 'Species2', bty='n', 
      ylab= 'individuals')
 lines(times, out$I2, type= 'l', lty=3, col="peru")
-legend("topright", c("susceptibles", "infected"), col="peru", lty= c(1,3), bty='n')
+#legend("topright", c("susceptibles", "infected"), col="peru", lty= c(1,3), bty='n')
 
-plot(times, out$S3, type= 'l', col="navy", xlab = 'days',  main= 'Species3', bty='n')
+lines(times, out$S3, type= 'l', col="navy", xlab = 'days',  main= 'Species3', bty='n')
 lines(times, out$I3, type= 'l', lty=3, col="navy")
-abline(h=PatchK[3,50])
-legend("topright", c("susceptibles", "infected"), col="navy", lty= c(1,3), bty='n')
+
+#legend("topright", c("susceptibles", "infected"), col="navy", lty= c(1,3), bty='n')
 
 plot(times, out$I1/(out$S1+out$I1), type='l',col="darkgreen", 
      ylab="prevalence", bty='n', ylim=c(0,1))
@@ -154,7 +155,7 @@ for(i in (Amax*3/4):(Amax-1)) {
   Area[i+1]=Area[i]+20
 }
 
-times <- seq(0, 50, by = 0.01)
+times <- seq(0, 50, by = 0.1)
 # Species1 #
 storeS1 = {};
 storeI1 = {};
@@ -215,7 +216,6 @@ for (i in 1:Hosts) {
 parametersF <- c(betaF,
                  b,
                  d,
-                 w,
                  alphaF,
                  gamma,
                  Dens,
@@ -303,3 +303,6 @@ plot(Area,storeI1/ (storeS1 + storeI1), type= 'l',
      xlab = 'area', bty='n', log='x')
 lines(Area,storeI2/(storeS2 + storeI2),  col="navy")
 lines(Area, storeI3/(storeS3 + storeI3), col="forestgreen")
+legend("topleft", c( "sp1", "sp2","sp3"),
+       col=c('darkgrey','navy','forestgreen'), 
+       lty=1, bty='n') 
