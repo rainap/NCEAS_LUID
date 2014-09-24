@@ -259,4 +259,56 @@ lines(times, out$I2/(out$S2+out$I2), type= 'l', col="darkorange3")
 lines(times,out$I3/(out$S3+out$I3), type='l', col= "navy")
 legend("topright", c("sp1", "sp2", "sp3"), bty='n', lty=1, col=c("darkgreen","darkorange3", "navy"))
      
-w
+### Looking a frequency dependence across the landscape
+#########
+#code to find equilibrium in each patch size
+### Calculating state variables at time = 40 ####
+Amax=100
+Area=numeric(Amax)
+Area[1]=1.0
+for(i in 1: (Amax/10) ) { 
+  Area[i+1]=Area[i]+1
+}
+for(i in (Amax/10):(Amax/4)) { 
+  Area[i+1]=Area[i]+2
+}
+for(i in (Amax/4):(Amax/2)) { 
+  Area[i+1]=Area[i]+5
+}    
+for(i in (Amax/2):(Amax*3/4)) { 
+  Area[i+1]=Area[i]+10
+}
+for(i in (Amax*3/4):(Amax-1)) { 
+  Area[i+1]=Area[i]+20
+}
+
+w=seq(0,1, by=0.1)
+
+times <- seq(0, 40, by = 1)
+
+storeS1 = {};
+storeI1 = {};
+storeS2 = {};
+storeI2 = {};
+storeS3 = {};
+storeI3 = {};
+plotArea = {};
+plotw= {};
+
+for (i in Area) {
+  parametersF["Area"] = i;
+  for (j in w){
+    parametersF["w"] = j;
+    out <- as.data.frame(ode(y= state, times = times, func = threehostpatchF, parms = parametersF, method="ode45"));
+    storeS1 = c(storeS1, out$S1[length(times)]);
+    storeI1 = c(storeI1, out$I1[length(times)]);
+    storeS2 = c(storeS2, out$S2[length(times)]);
+    storeI2 = c(storeI2, out$I2[length(times)]);
+    storeS3 = c(storeS3, out$S3[length(times)]);
+    storeI3 = c(storeI3, out$I3[length(times)]);
+    plotArea = c(plotArea, i)
+    plotw= c(plotw, j)
+  }
+}
+
+

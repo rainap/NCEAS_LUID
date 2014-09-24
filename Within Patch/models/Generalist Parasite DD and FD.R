@@ -59,13 +59,6 @@ for (i in 1:Hosts) {
   gamma[i]=0.05*Mass[i]^-0.27 #
 }
 
-#  Frequency-dependent transmission
-mf = 1.12 #1.12 
-for (i in 1:Hosts) {
-  betaF[i]=1.3*mf*Mass[i]^-0.26
-  alphaF[i]= d[i]*mf
-}
-
 #Calculate carrying capacity for a patch
 PatchK=matrix(NA, ncol = Amax, nrow = Hosts) #Number of Host individuals in a given species+patch; carrycapacity for patch
 for(i in 1:Amax)   {
@@ -87,7 +80,7 @@ state<- c(S1=if (Dens[1]*Area>1) Dens[1]*Area else 0,
           S3=if (Dens[3]*Area>1) Dens[1]*Area else 0,
           I3=0 
 )
-parameters <- c(betaD,
+parametersD <- c(betaD,
                 b,
                 d,
                 alphaD,
@@ -96,7 +89,7 @@ parameters <- c(betaD,
                 Area)
 
 threehostpatchD <- function(t, state, parameters) {
-  with(as.list(c(state, parameters)), {
+  with(as.list(c(state, parametersD)), {
   dS1 <- b[1]*(S1+I1)*(1-((S1+I1)/(Dens[1]*Area))) - ((betaD[1]*S1*I1) + (betaD[2]*S1*I2) + (betaD[3]*S1*I3)) - d[1]*S1 + gamma[1]*I1
   dI1 <- ((betaD[1]*S1*I1) + (betaD[2]*S1*I2) + (betaD[3]*S1*I3)) - (d[1]+alphaD[1]+gamma[1])*I1
   dS2 <- b[2]*(S2+I2)*(1-((S2+I2)/(Dens[2]*Area))) - ((betaD[1]*S2*I1) + (betaD[2]*S2*I2) + (betaD[3]*S2*I3)) - d[2]*S2 + gamma[2]*I2
@@ -110,7 +103,7 @@ threehostpatchD <- function(t, state, parameters) {
 ### output of times ###
 times <- seq(0, 100, by = 1)
 
-out <- as.data.frame(lsoda(y= state, times = times, func = threehostpatchD, parms = parameters))
+out <- as.data.frame(lsoda(y= state, times = times, func = threehostpatchD, parms = parametersD))
 out$time = NULL
 
 # par(mar=c(4,4,2,2))
@@ -170,8 +163,8 @@ storeI2 = {};
 storeS3 = {};
 storeI3 = {};
 for (i in Area) {
-  parameters["Area"] = i;
-  out <- as.data.frame(ode(y= state, times = times, func = threehostpatchD, parms = parameters, method="ode45"));
+  parametersD["Area"] = i;
+  out <- as.data.frame(ode(y= state, times = times, func = threehostpatchD, parms = parametersD, method="ode45"));
   storeS1 = c(storeS1, out$S1[length(times)]);
   storeI1 = c(storeI1, out$I1[length(times)]);
   storeS2 = c(storeS2, out$S2[length(times)]);
@@ -210,3 +203,103 @@ plot(Area,storeI1/ (storeS1 + storeI1), type= 'l',
 lines(Area,storeI2/(storeS2 + storeI2),  col="navy")
 lines(Area, storeI3/(storeS3 + storeI3), col="forestgreen")
 
+
+### Frequency dependent
+
+#  Frequency-dependent transmission
+mf = 1.12 #1.12 
+for (i in 1:Hosts) {
+  betaF[i]=1.3*mf*Mass[i]^-0.26
+  alphaF[i]= d[i]*mf
+}
+parametersF <- c(betaF,
+                 b,
+                 d,
+                 w,
+                 alphaF,
+                 gamma,
+                 Dens,
+                 Area)
+
+#ODE for FD transmission
+
+threehostpatchF <- function(t, state, parameters) {
+  with(as.list(c(state, parametersF)), {
+    dS1 <- b[1]*(S1+I1)*(1-((S1+I1)/(Dens[1]*Area))) - ((betaF[1]*S1*I1/(S1+I1+S2+I2+S3+I3)) + (betaF[2]*S1*I2/(S1+I1+S2+I2+S3+I3)) + (betaF[3]*S1*I3/(S1+I1+S2+I2+S3+I3))) - d[1]*S1 + gamma[1]*I1
+    dI1 <- ((betaF[1]*S1*I1/(S1+I1+S2+I2+S3+I3)) + (betaF[2]*S1*I2/(S1+I1+S2+I2+S3+I3)) + (betaF[3]*S1*I3/(S1+I1+S2+I2+S3+I3))) - (d[1]+alphaF[1]+gamma[1])*I1
+    dS2 <- b[2]*(S2+I2)*(1-((S2+I2)/(Dens[2]*Area))) - ((betaF[1]*S2*I1/(S1+I1+S2+I2+S3+I3)) + (betaF[2]*S2*I2/(S1+I1+S2+I2+S3+I3)) + (betaF[3]*S2*I3/(S1+I1+S2+I2+S3+I3))) - d[2]*S2 + gamma[2]*I2
+    dI2 <- ((betaF[1]*S2*I1/(S1+I1+S2+I2+S3+I3)) + (betaF[2]*S2*I2/(S1+I1+S2+I2+S3+I3)) + (betaF[3]*S2*I3/(S1+I1+S2+I2+S3+I3))) - (d[2]+alphaF[2]+gamma[2])*I2
+    dS3 <- b[3]*(S3+I3)*(1-((S3+I3)/(Dens[1]*Area))) - ((betaF[1]*S3*I1/(S1+I1+S2+I2+S3+I3)) + (betaF[2]*S3*I2/(S1+I1+S2+I2+S3+I3)) + (betaF[3]*S3*I3/(S1+I1+S2+I2+S3+I3))) - d[3]*S3 + gamma[3]*I3
+    dI3 <- ((betaF[1]*S3*I1/(S1+I1+S2+I2+S3+I3)) +  (betaF[2]*S3*I2/(S1+I1+S2+I2+S3+I3)) + (betaF[3]*S3*I3/(S1+I1+S2+I2+S3+I3))) - (d[3]+alphaF[3]+gamma[3])*I3
+    list(c(dS1, dI1, dS2, dI2, dS3, dI3))
+  })
+}
+
+### Looking a frequency dependence across the landscape
+Amax=100
+Area=numeric(Amax)
+Area[1]=1.0
+for(i in 1: (Amax/10) ) { 
+  Area[i+1]=Area[i]+1
+}
+for(i in (Amax/10):(Amax/4)) { 
+  Area[i+1]=Area[i]+2
+}
+for(i in (Amax/4):(Amax/2)) { 
+  Area[i+1]=Area[i]+5
+}    
+for(i in (Amax/2):(Amax*3/4)) { 
+  Area[i+1]=Area[i]+10
+}
+for(i in (Amax*3/4):(Amax-1)) { 
+  Area[i+1]=Area[i]+20
+}
+
+times <- seq(0, 50, by = 0.01)
+# Species1 #
+storeS1 = {};
+storeI1 = {};
+storeS2 = {};
+storeI2 = {};
+storeS3 = {};
+storeI3 = {};
+for (i in Area) {
+  parametersF["Area"] = i;
+  out <- as.data.frame(ode(y= state, times = times, func = threehostpatchF, parms = parametersF, method="ode45"));
+  storeS1 = c(storeS1, out$S1[length(times)]);
+  storeI1 = c(storeI1, out$I1[length(times)]);
+  storeS2 = c(storeS2, out$S2[length(times)]);
+  storeI2 = c(storeI2, out$I2[length(times)]);
+  storeS3 = c(storeS3, out$S3[length(times)]);
+  storeI3 = c(storeI3, out$I3[length(times)]);
+}
+
+plot(Area, (storeS1+storeI1)/(Area*Dens[1]), type = "l", 
+     col= "gray40", xlab= "patch size", ylab= "proportion of carrying capacity",
+     ylim=c(0, 1), bty='n', cex=0.4,pch=19, log='x')
+lines(Area, (storeS2+storeI2)/(Area*Dens[2]), type = "l", 
+      col= "navy")
+lines(Area, (storeS3+storeI3)/(Area*Dens[3]), type = "l", 
+      col= "forestgreen")
+legend("topright", c( "sp1", "sp2","sp3"),
+       col=c('darkgrey','navy','forestgreen'), 
+       lty=1, bty='n') 
+
+plot(Area, storeS1, type = "l", 
+     col= "gray40", xlab= "patch size", ylab= "individuals",
+     bty='n', cex=0.4,pch=19, log='x', ylim=c(0,max(storeS1)))
+lines(Area, storeI1, lty=3, col= "gray40")
+lines(Area, storeS2,  col= "navy")
+lines(Area, storeI2, lty=3, col= "navy")
+lines(Area, storeS3,  col= "forestgreen")
+lines(Area, storeI3, lty=3, col= "forestgreen")
+legend("topleft", c( "sp1", "sp2","sp3"),
+       col=c('darkgrey','navy','forestgreen'), 
+       lty=1, bty='n') 
+
+
+plot(Area,storeI1/ (storeS1 + storeI1), type= 'l', 
+     col="gray40", ylim= c(0, 1.0), ylab='proportion infected', 
+     xlab = 'area', bty='n', log='x')
+lines(Area,storeI2/(storeS2 + storeI2),  col="navy")
+lines(Area, storeI3/(storeS3 + storeI3), col="forestgreen")
