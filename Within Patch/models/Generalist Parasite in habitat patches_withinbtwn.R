@@ -312,3 +312,30 @@ for (i in Area) {
 }
 
 
+mesh3d(storeI1, plotArea, plotw, type='shade')
+plot3d(storeS2,storeI2, plotArea)
+wireframe(storeS2 ~ Area * storeI2, main="Host2-midsize-1kg")
+wireframe(storeS3 ~ plotArea * plotw, main="Host3-large-10kg")
+wireframe(storeI1 ~ plotArea * plotw, main="Host1-small-0.1kg")
+
+require(fields)
+
+dev.new(width=6, height=6)
+set.panel(2,2)
+
+# Plot x,y
+plot(plotArea, storeI1)
+
+# Model z = f(x,y) with splines
+fit = Tps(mat1, z)
+pred = predict.surface(fit)
+
+# Plot fit
+image(pred)
+surface(pred)
+
+# Plot standard error of fit 
+xg = make.surface.grid(list(pred$x, pred$y))
+pred.se = predict.se(fit, xg)
+
+surface(as.surface(xg, pred.se))
