@@ -49,17 +49,17 @@ for (i in 1:Hosts) {
   alphaF[i]= d[i]*mf
 }
 
-#Calculate carrying capacity for a patch
-PatchK=matrix(NA, ncol = Amax, nrow = Hosts) #Number of Host individuals in a given species+patch; carrycapacity for patch
-for(i in 1:Amax)   {
-  SpecAcc[i]=0
-  for(j in 1:Hosts) {
-    PatchK[j,i]=Dens[j]*Area[i] #fix scales
-    if (PatchK[j,i]>1) PatchK[j,i] else PatchK[j,i]=0
-    if (PatchK[j,i]>1) SpecAcc[i]=SpecAcc[i]+1 else SpecAcc[i]
-  }
-}  
- 
+# #Calculate carrying capacity for a patch
+# PatchK=matrix(NA, ncol = Amax, nrow = Hosts) #Number of Host individuals in a given species+patch; carrycapacity for patch
+# for(i in 1:Amax)   {
+#   SpecAcc[i]=0
+#   for(j in 1:Hosts) {
+#     PatchK[j,i]=Dens[j]*Area[i] #fix scales
+#     if (PatchK[j,i]>1) PatchK[j,i] else PatchK[j,i]=0
+#     if (PatchK[j,i]>1) SpecAcc[i]=SpecAcc[i]+1 else SpecAcc[i]
+#   }
+# }  
+
 
 ####
 Area=1
@@ -140,8 +140,12 @@ for(i in (Amax/2):(Amax*3/4)) {
 for(i in (Amax*3/4):(Amax-1)) { 
   Area[i+1]=Area[i]+20
 }
+
 w=seq(0,1, by=0.1)
+
 times <- seq(0, 50, by = 1)
+
+
 # Species1 #
 storeS1 = as.data.frame(matrix(NA,length(w),length(Area)));
 names(storeS1)=Area
@@ -156,17 +160,17 @@ names(storeS3)=Area
 storeI3 = as.data.frame(matrix(NA,length(w),length(Area)));
 names(storeI3)=Area
 
-for (i in Area) {
-  parameters["Area"] = i;
-  for (j in w){
-    parameters["w"] = j;
+for (i in w) {
+  parameters["w"] = i;
+  for (j in Area){
+    parameters["Area"] = j;
     out <- as.data.frame(ode(y= state, times = times, func = threehostpatchD, parms = parameters, method="ode45"));
-    storeS1[j,i] = out$S1[length(times)];
-    storeI1[j,i] = out$I1[length(times)];
-    storeS2[j,i] = out$S2[length(times)];
-    storeI2[j,i] = out$I2[length(times)];
-    storeS3[j,i] = out$S3[length(times)];
-    storeI3[j,i] = out$I3[length(times)];
+    storeS1[i,j] = out$S1[length(times)];
+    storeI1[i,j] = out$I1[length(times)];
+    storeS2[i,j] = out$S2[length(times)];
+    storeI2[i,j] = out$I2[length(times)];
+    storeS3[i,j] = out$S3[length(times)];
+    storeI3[i,j] = out$I3[length(times)];
   }
 }
 
