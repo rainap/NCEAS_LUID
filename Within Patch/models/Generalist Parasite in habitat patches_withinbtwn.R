@@ -1,40 +1,19 @@
 ######### 
-# BASIC CODE FOR A GENERALIST PATHOGEN; 3 HOSTS
-########
+# BASIC CODE FOR A GENERALIST PATHOGEN; 
+# varying within and between host transmission
+# c faust created sept 24 for sesync
 rm(list = ls())
-library(deSolve)
-##  Set range of pathogen Ros
-Amax = 100 # maximum number of unique patches
-Area=numeric(Amax)
-SpecAcc=numeric(Amax)
 
-#  Set a range of Area values
-Area[1]=1.0
-for(i in 1: (Amax/10) ) { 
-  Area[i+1]=Area[i]+1
-}
-for(i in (Amax/10):(Amax/4)) { 
-  Area[i+1]=Area[i]+2
-}
-for(i in (Amax/4):(Amax/2)) { 
-  Area[i+1]=Area[i]+5
-}    
-for(i in (Amax/2):(Amax*3/4)) { 
-  Area[i+1]=Area[i]+10
-}
-for(i in (Amax*3/4):(Amax-1)) { 
-  Area[i+1]=Area[i]+20
-}
-Area=Area/40
+#Libraries
+library(deSolve)
+library(lattice)
 
 #Hosts
 Hosts=3  #number of host species
 
 Mass=numeric(Hosts)
-# Set a range of body masses in Kg
-Mass[1:3]=c(0.1, 1.0,10.0)
+Mass[1:3]=c(0.1, 1.0,10.0) # Set a range of body masses in Kg
 
-#Empty vectors for parameters
 Dens = numeric(Hosts) #assume each host has a unique density that is fixed
 betaD = numeric(Hosts) #density dependent transmission; each host has a unique rate that is fixed
 betaF = numeric(Hosts) #frequency dependent transmission; each host has a unique rate that is fixed
@@ -44,7 +23,10 @@ b = numeric(Hosts) #birth rates r+d
 alphaF = numeric(Hosts) #disease induced mortality for Frequency dependent pathogens
 alphaD = numeric(Hosts) #disease induced mortality for density dependent pathogens
 delta = numeric(Hosts)
-gamma = numeric(Hosts)
+gamma = numeric(Hosts) #recovery rate
+
+#slider for within and between host 
+w = 0.1
 
 #  Density-dependent transmission
 md = 26  #26x the background mortality rate
@@ -79,7 +61,7 @@ for(i in 1:Amax)   {
  
 
 ####
-library(deSolve)
+Area=1
 state<- c(S1=if (Dens[1]*Area>1) Dens[1]*Area else 0,
           I1=1,
           S2=if (Dens[2]*Area>1) Dens[2]*Area else 0,
@@ -90,6 +72,7 @@ state<- c(S1=if (Dens[1]*Area>1) Dens[1]*Area else 0,
 parameters <- c(betaD,
                 b,
                 d,
+                w,
                 alphaD,
                 gamma,
                 Dens,
@@ -97,12 +80,12 @@ parameters <- c(betaD,
 
 threehostpatchD <- function(t, state, parameters) {
   with(as.list(c(state, parameters)), {
-  dS1 <- b[1]*(S1+I1)*(1-((S1+I1)/(Dens[1]*Area))) - ((betaD[1]*S1*I1) + (betaD[2]*S1*I2) + (betaD[3]*S1*I3)) - d[1]*S1 + gamma[1]*I1
-  dI1 <- ((betaD[1]*S1*I1) + (betaD[2]*S1*I2) + (betaD[3]*S1*I3)) - (d[1]+alphaD[1]+gamma[1])*I1
-  dS2 <- b[2]*(S2+I2)*(1-((S2+I2)/(Dens[2]*Area))) - ((betaD[1]*S2*I1) + (betaD[2]*S2*I2) + (betaD[3]*S2*I3)) - d[2]*S2 + gamma[2]*I2
-  dI2 <- ((betaD[1]*S2*I1) + (betaD[2]*S2*I2) + (betaD[3]*S2*I3)) - (d[2]+alphaD[2]+gamma[2])*I2
-  dS3 <- b[3]*(S3+I3)*(1-((S3+I3)/(Dens[1]*Area))) - ((betaD[1]*S3*I1) +  (betaD[2]*S3*I2) + (betaD[3]*S3*I3)) - d[3]*S3 + gamma[3]*I3
-  dI3 <- ((betaD[1]*S3*I1) +  (betaD[2]*S3*I2) + (betaD[3]*S3*I3)) - (d[3]+alphaD[3]+gamma[3])*I3
+  dS1 <- b[1]*(S1+I1)*(1-((S1+I1)/(Dens[1]*Area))) - ((betaD[1]*S1*I1) + (w*betaD[2]*S1*I2) + (w*betaD[3]*S1*I3)) - d[1]*S1 + gamma[1]*I1
+  dI1 <- ((betaD[1]*S1*I1) + (w*betaD[2]*S1*I2) + (w*betaD[3]*S1*I3)) - (d[1]+alphaD[1]+gamma[1])*I1
+  dS2 <- b[2]*(S2+I2)*(1-((S2+I2)/(Dens[2]*Area))) - ((w*betaD[1]*S2*I1) + (betaD[2]*S2*I2) + (w*betaD[3]*S2*I3)) - d[2]*S2 + gamma[2]*I2
+  dI2 <- ((w*betaD[1]*S2*I1) + (betaD[2]*S2*I2) + (w*betaD[3]*S2*I3)) - (d[2]+alphaD[2]+gamma[2])*I2
+  dS3 <- b[3]*(S3+I3)*(1-((S3+I3)/(Dens[1]*Area))) - ((w*betaD[1]*S3*I1) +  (w*betaD[2]*S3*I2) + (betaD[3]*S3*I3)) - d[3]*S3 + gamma[3]*I3
+  dI3 <- ((w*betaD[1]*S3*I1) +  (w*betaD[2]*S3*I2) + (betaD[3]*S3*I3)) - (d[3]+alphaD[3]+gamma[3])*I3
   list(c(dS1, dI1, dS2, dI2, dS3, dI3))
   })
 }
@@ -110,29 +93,22 @@ threehostpatchD <- function(t, state, parameters) {
 ### output of times ###
 times <- seq(0, 100, by = 1)
 
-out <- as.data.frame(lsoda(y= state, times = times, func = threehostpatchD, parms = parameters))
+out <- as.data.frame(ode(y= state, times = times, func = threehostpatchD, parms = parameters,method="ode45" ))
 out$time = NULL
-
-# par(mar=c(4,4,2,2))
-# layout(matrix(1:1,1, 1))
-# layout.show(6)
 
 plot(times, out$S1, type='l',  xlab = 'years', main= 'Species 1', bty='n', col="darkgreen", 
      ylim= c(0,Dens[1]*Area), ylab= 'individuals')
 lines(times, out$I1, type='l', lty= 3, col="darkgreen")
 #lines(times, out$S1+ out$I1, col= 'black')
 legend("topright", c("susceptibles", "infected"), col="darkgreen", lty= c(1,3), bty='n')
-
-plot(times, out$S2, type= 'l', lty=1, col="peru", xlab = 'days', 
+lines(times, out$S2, type= 'l', lty=1, col="peru", xlab = 'days', 
       main= 'Species2', bty='n',
      ylab= 'individuals')
 lines(times, out$I2, type= 'l', lty=3, col="peru")
-legend("topright", c("susceptibles", "infected"), col="peru", lty= c(1,3), bty='n')
-
-plot(times, out$S3, type= 'l', col="navy", xlab = 'days',  main= 'Species3', bty='n')
+#legend("topright", c("susceptibles", "infected"), col="peru", lty= c(1,3), bty='n')
+lines(times, out$S3, type= 'l', col="navy", xlab = 'days',  main= 'Species3', bty='n')
 lines(times, out$I3, type= 'l', lty=3, col="navy")
-abline(h=PatchK[3,50])
-legend("topright", c("susceptibles", "infected"), col="navy", lty= c(1,3), bty='n')
+#legend("topright", c("susceptibles", "infected"), col="navy", lty= c(1,3), bty='n')
 
 plot(times, out$I1/(out$S1+out$I1), type='l',col="darkgreen", 
      ylab="prevalence", bty='n', ylim=c(0,1))
@@ -144,6 +120,9 @@ legend("topright", c("sp1", "sp2", "sp3"), bty='n', lty=1, col=c("darkgreen","da
 #########
 #code to find equilibrium in each patch size
 ### Calculating state variables at time = 40 ####
+Amax = 100 # maximum number of unique patches
+Area=numeric(Amax) #size of each patch
+SpecAcc=numeric(Amax) # number of species in each patch
 Area[1]=1.0
 for(i in 1: (Amax/10) ) { 
   Area[i+1]=Area[i]+1
@@ -160,7 +139,7 @@ for(i in (Amax/2):(Amax*3/4)) {
 for(i in (Amax*3/4):(Amax-1)) { 
   Area[i+1]=Area[i]+20
 }
-
+w=seq(0,1, by=0.02)
 times <- seq(0, 50, by = 0.01)
 # Species1 #
 storeS1 = {};
@@ -169,20 +148,39 @@ storeS2 = {};
 storeI2 = {};
 storeS3 = {};
 storeI3 = {};
+
 for (i in Area) {
   parameters["Area"] = i;
-  out <- as.data.frame(ode(y= state, times = times, func = threehostpatchD, parms = parameters, method="ode45"));
-  storeS1 = c(storeS1, out$S1[length(times)]);
-  storeI1 = c(storeI1, out$I1[length(times)]);
-  storeS2 = c(storeS2, out$S2[length(times)]);
-  storeI2 = c(storeI2, out$I2[length(times)]);
-  storeS3 = c(storeS3, out$S3[length(times)]);
-  storeI3 = c(storeI3, out$I3[length(times)]);
+  for (j in w){
+    parameters["w"] = j;
+    out <- as.data.frame(ode(y= state, times = times, func = threehostpatchD, parms = parameters, method="ode45"));
+    storeS1 = c(storeS1, out$S1[length(times)]);
+    storeI1 = c(storeI1, out$I1[length(times)]);
+    storeS2 = c(storeS2, out$S2[length(times)]);
+    storeI2 = c(storeI2, out$I2[length(times)]);
+    storeS3 = c(storeS3, out$S3[length(times)]);
+    storeI3 = c(storeI3, out$I3[length(times)]);
+  }
 }
+
+plot(w, storeS1+storeI1, type='p',  col= "gray40", pch=20, cex=0.5,
+     bty='n', ylim=c(0, max(storeS1+storeI1)), 
+     ylab='population', xlab="between host probability of transmission",
+     main='host pop. dependent on between species transmission')
+points(w, storeS2+storeI2, col= "navy", pch=20, cex=0.5)
+points(w, storeS3+storeI3, col= "forestgreen", pch=20, cex=0.5)
+
+plot(w, storeI1/(storeS1+storeI1), type='p',  col= "gray40", pch=20, cex=0.5,
+     bty='n', ylim=c(0, 1), 
+     ylab='population', xlab="between host probability of transmission",
+     main='prevalence of infection')
+points(w, storeI2/(storeS2+storeI2), col= "navy", pch=20, cex=0.5)
+points(w, storeI3/(storeS3+storeI3), col= "forestgreen", pch=20, cex=0.5)
+
 
 plot(Area, (storeS1+storeI1)/(Area*Dens[1]), type = "l", 
      col= "gray40", xlab= "patch size", ylab= "proportion of carrying capacity",
-     ylim=c(0, 1), bty='n', cex=0.4,pch=19, log='x')
+     ylim=c(0, 1), bty='n', cex=0.4,pch=19, log='x', main="populations of hosts across patch size")
 lines(Area, (storeS2+storeI2)/(Area*Dens[2]), type = "l", 
      col= "navy")
 lines(Area, (storeS3+storeI3)/(Area*Dens[3]), type = "l", 
