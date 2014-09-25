@@ -45,6 +45,7 @@ for (i in 1:Hosts) {
 
 
 #### Input for DD model
+Area=1
 state<- c(S1=if (Dens[1]*Area>1) Dens[1]*Area else 0,
           I1=1,
           S2=if (Dens[2]*Area>1) Dens[2]*Area else 0,
@@ -79,8 +80,8 @@ times <- seq(0, 100, by = 1)
 out <- as.data.frame(ode(y= state, times = times, func = threehostpatchD, parms = parametersD,method="ode45" ))
 out$time = NULL
 
-# plot(times, out$S1, type='l',  xlab = 'years', main= 'Species 1', bty='n', col="darkgreen", 
-#      ylim= c(0,Dens[1]*Area), ylab= 'individuals')
+plot(times, out$S1, type='l',  xlab = 'years', main= 'Species 1', bty='n', col="darkgreen", 
+      ylim= c(0,Dens[1]*Area), ylab= 'individuals')
 # lines(times, out$I1, type='l', lty= 3, col="darkgreen")
 # #lines(times, out$S1+ out$I1, col= 'black')
 # legend("topright", c("susceptibles", "infected"), col="darkgreen", lty= c(1,3), bty='n')
@@ -151,53 +152,62 @@ for (i in Area) {
     plotw= c(plotw, j)
   }
 }
+# 
+# col.l <- colorRampPalette(c('blue', 'cyan','green','yellow','orange','red'))
+# wireframe(storeS1 ~ plotArea * plotw, main="Host1-smallsize-.5kg",
+#           drape = TRUE,
+#           #perspective = FALSE, 
+#           #aspect = c(10,10), 
+#           #colorkey = TRUE, pretty=T,
+#           #col.regions= c(   'blue',  'cyan')
+#           #form = "full", col.regions=col.l
+#             )
+# wireframe(storeS2 ~ plotArea * plotw, main="Host2-midsize-1kg",
+#           drape= T , zlim=c(-1000,max(storeS2,na.rm=T)))
+# wireframe(storeS3 ~ plotArea * plotw, main="Host3-large-5kg",
+#           drape= T)
+# wireframe((storeI1+storeI2+storeI3) ~ plotArea * plotw, 
+#           drape= T, main="total infecteds",
+#           zlab='number of infecteds', xlab= "patch size", ylab="between species trans")
+# theseCol = colorRampPalette(c("red", "white","blue"))
+# wireframe((storeI1/(storeI1+storeS1)) ~ plotArea * plotw, 
+#           drape= T, main="prevalence in sp1",
+#           #col.regions=theseCol,
+#           xlab= "patch size", ylab="between species trans",
+#           zlab='prevalence')
+# library(graphics)
+# 
+# filled.contour(plotArea,plotw, storeS2)
+#                #xlim = range(x, finite = TRUE),
+#                #ylim = range(y, finite = TRUE),
+#                #zlim = range(z, finite = TRUE),
+#                levels = pretty(storeS2, nlevels), nlevels = 20,
+#                color.palette = cm.colors,
+#                col = color.palette(length(levels) - 1),
+#                plot.title, plot.axes, key.title, key.axes,
+#                asp = NA, xaxs = "i", yaxs = "i", las = 1,
+#                axes = TRUE, frame.plot = axes, ...)
 
+DD3hostgenw<-as.data.frame(cbind(plotArea,plotw,storeS1,storeI1,storeS2,storeI2,storeS3,storeI3))
+write.csv(DD3hostgenw, file = "DD3hostgenw.csv",row.names=FALSE)
 
-# plot(w, storeS1+storeI1, type='p',  col= "gray40", pch=20, cex=0.5,
-#      bty='n', ylim=c(0, max(storeS1+storeI1)), 
-#      ylab='population', xlab="between host probability of transmission",
-#      main='host pop. dependent on between species transmission')
-# points(w, storeS2+storeI2, col= "navy", pch=20, cex=0.5)
-# points(w, storeS3+storeI3, col= "forestgreen", pch=20, cex=0.5)
-# 
-# plot(w, storeI1/(storeS1+storeI1), type='p',  col= "gray40", pch=20, cex=0.5,
-#      bty='n', ylim=c(0, 1), 
-#      ylab='population', xlab="between host probability of transmission",
-#      main='prevalence of infection')
-# points(w, storeI2/(storeS2+storeI2), col= "navy", pch=20, cex=0.5)
-# points(w, storeI3/(storeS3+storeI3), col= "forestgreen", pch=20, cex=0.5)
-# 
-# 
-# plot(Area, (storeS1+storeI1)/(Area*Dens[1]), type = "l", 
-#      col= "gray40", xlab= "patch size", ylab= "proportion of carrying capacity",
-#      ylim=c(0, 1), bty='n', cex=0.4,pch=19, log='x', main="populations of hosts across patch size")
-# lines(Area, (storeS2+storeI2)/(Area*Dens[2]), type = "l", 
-#      col= "navy")
-# lines(Area, (storeS3+storeI3)/(Area*Dens[3]), type = "l", 
-#       col= "forestgreen")
-# legend("topright", c( "sp1", "sp2","sp3"),
-#        col=c('darkgrey','navy','forestgreen'), 
-#        lty=1, bty='n') 
-# 
-# plot(Area, storeS1, type = "l", 
-#      col= "gray40", xlab= "patch size", ylab= "individuals",
-#      bty='n', cex=0.4,pch=19, log='x', ylim=c(0,max(storeS1)))
-# lines(Area, storeI1, lty=3, col= "gray40")
-# lines(Area, storeS2,  col= "navy")
-# lines(Area, storeI2, lty=3, col= "navy")
-# lines(Area, storeS3,  col= "forestgreen")
-# lines(Area, storeI3, lty=3, col= "forestgreen")
-# legend("topleft", c( "sp1", "sp2","sp3"),
-#        col=c('darkgrey','navy','forestgreen'), 
-#        lty=1, bty='n') 
-# 
-# 
-# plot(Area,storeI1/ (storeS1 + storeI1), type= 'l', 
-#      col="gray40", ylim= c(0, 1.0), ylab='proportion infected', 
-#      xlab = 'area', bty='n', log='x')
-# lines(Area,storeI2/(storeS2 + storeI2),  col="navy")
-# lines(Area, storeI3/(storeS3 + storeI3), col="forestgreen")
+wireframe(storeS2 ~ plotArea * plotw, data=DD3hostgenw, 
+          main="DDHost S2-midsize-1kg", drape = TRUE)
+wireframe(storeI2 ~ plotArea * plotw, data=DD3hostgenw, 
+          main="DDHost I2-midsize-1kg", drape = TRUE)
+wireframe(storeS3 ~ plotArea * plotw, data=DD3hostgenw,
+          main="DDHost S3-large-10kg", drape = TRUE, zlim=c(0,10))
+wireframe(storeI3 ~ plotArea * plotw, data=DD3hostgenw,
+          main="DDHost I3-large-10kg", drape = TRUE)
+wireframe(storeI1 ~ plotArea * plotw,data=DD3hostgenw, 
+          main="DDHost I1-small-0.1kg", drape = TRUE)
+wireframe(storeS1 ~ plotArea * plotw,data=DD3hostgenw, 
+          main="DDHost S1-small-0.1kg",drape = TRUE)
 
+wireframe((storeI1+storeI2+storeI3)/(storeI1+storeS1+storeI2+storeI3+storeS2+storeS3)  ~ plotArea * plotw,
+          data=DD3hostgenw, main="prevalence in all", drape = TRUE)
+wireframe((storeI1+storeI2+storeI3)~ plotArea * plotw,data=DD3hostgenw, 
+          main="number of infected individuals", drape = TRUE)
 
 ########
 # Frequency dependent transmission
@@ -312,30 +322,16 @@ for (i in Area) {
 }
 
 
-mesh3d(storeI1, plotArea, plotw, type='shade')
-plot3d(storeS2,storeI2, plotArea)
-wireframe(storeS2 ~ Area * storeI2, main="Host2-midsize-1kg")
-wireframe(storeS3 ~ plotArea * plotw, main="Host3-large-10kg")
-wireframe(storeI1 ~ plotArea * plotw, main="Host1-small-0.1kg")
+FD3hostgenw<-as.data.frame(cbind(plotArea,plotw,storeS1,storeI1,storeS2,storeI2,storeS3,storeI3))
+write.csv(FD3hostgenw, file = "FD3hostgenw.csv",row.names=FALSE)
+FD3hostgenw$storeS2
 
-require(fields)
+wireframe(storeS2 ~ plotArea * plotw, data=FD3hostgenw, main="Host S2-midsize-1kg")
+wireframe(storeI2 ~ plotArea * plotw, data=FD3hostgenw, main="Host I2-midsize-1kg")
+wireframe(storeS3 ~ plotArea * plotw, data=FD3hostgenw,main="Host S3-large-10kg")
+wireframe(storeI3 ~ plotArea * plotw, data=FD3hostgenw,main="Host I3-large-10kg")
+wireframe(storeI1 ~ plotArea * plotw,data=FD3hostgenw, main="Host I1-small-0.1kg")
+wireframe(storeS1 ~ plotArea * plotw,data=FD3hostgenw, main="Host S1-small-0.1kg")
 
-dev.new(width=6, height=6)
-set.panel(2,2)
-
-# Plot x,y
-plot(plotArea, storeI1)
-
-# Model z = f(x,y) with splines
-fit = Tps(mat1, z)
-pred = predict.surface(fit)
-
-# Plot fit
-image(pred)
-surface(pred)
-
-# Plot standard error of fit 
-xg = make.surface.grid(list(pred$x, pred$y))
-pred.se = predict.se(fit, xg)
-
-surface(as.surface(xg, pred.se))
+wireframe((storeI1+storeI2+storeI3)/(storeI1+storeS1+storeI2+storeI3+storeS2+storeS3)  ~ plotArea * plotw,data=FD3hostgenw, main="prevalence in all")
+wireframe((storeI1+storeI2+storeI3)~ plotArea * plotw,data=FD3hostgenw, main="number of infected individuals")
