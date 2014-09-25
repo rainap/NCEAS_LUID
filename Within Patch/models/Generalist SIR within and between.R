@@ -9,6 +9,7 @@ rm(list = ls())
 library(deSolve)
 library(lattice)
 library(rgl)
+library(colorRamps)
 
 #Hosts
 Hosts=3  #number of host species
@@ -68,13 +69,13 @@ parametersD <- c(betaD,
 threehostpatchDDSIR <- function(t, state, parameters) {
   with(as.list(c(state, parametersD)), {
   dS1 <- b[1]*(S1+I1+R1)*(1-((S1+I1)/(Dens[1]*Area))) - ((betaD[1]*S1*I1) + (w*betaD[2]*S1*I2) + (w*betaD[3]*S1*I3)) - d[1]*S1 
-  dI1 <- ((betaD[1]*S1*I1) + (w*betaD[2]*S1*I2) + (w*betaD[3]*S1*I3)) - (d[1]+alphaD[1])*I1
+  dI1 <- ((betaD[1]*S1*I1) + (w*betaD[2]*S1*I2) + (w*betaD[3]*S1*I3)) - (d[1]+alphaD[1]+gamma[1])*I1
   dR1 <- gamma[1]*I1 - d[1]*R1
-  dS2 <- b[2]*(S2+I2)*(1-((S2+I2)/(Dens[2]*Area))) - ((w*betaD[1]*S2*I1) + (betaD[2]*S2*I2) + (w*betaD[3]*S2*I3)) - d[2]*S2 + gamma[2]*I2
-  dI2 <- ((w*betaD[1]*S2*I1) + (betaD[2]*S2*I2) + (w*betaD[3]*S2*I3)) - (d[2]+alphaD[2])*I2
+  dS2 <- b[2]*(S2+I2)*(1-((S2+I2)/(Dens[2]*Area))) - ((w*betaD[1]*S2*I1) + (betaD[2]*S2*I2) + (w*betaD[3]*S2*I3)) - d[2]*S2 
+  dI2 <- ((w*betaD[1]*S2*I1) + (betaD[2]*S2*I2) + (w*betaD[3]*S2*I3)) - (d[2]+alphaD[2]+gamma[2])*I2
   dR2 <- gamma[2]*I2 - d[2]*R2
-  dS3 <- b[3]*(S3+I3)*(1-((S3+I3)/(Dens[1]*Area))) - ((w*betaD[1]*S3*I1) +  (w*betaD[2]*S3*I2) + (betaD[3]*S3*I3)) - d[3]*S3 + gamma[3]*I3
-  dI3 <- ((w*betaD[1]*S3*I1) +  (w*betaD[2]*S3*I2) + (betaD[3]*S3*I3)) - (d[3]+alphaD[3])*I3
+  dS3 <- b[3]*(S3+I3)*(1-((S3+I3)/(Dens[1]*Area))) - ((w*betaD[1]*S3*I1) +  (w*betaD[2]*S3*I2) + (betaD[3]*S3*I3)) - d[3]*S3 
+  dI3 <- ((w*betaD[1]*S3*I1) +  (w*betaD[2]*S3*I2) + (betaD[3]*S3*I3)) - (d[3]+alphaD[3]+gamma[3])*I3
   dR3 <- gamma[3]*I3 - d[3]*R3
   list(c(dS1, dI1, dR1, dS2, dI2, dR2, dS3, dI3, dR3))
   })
@@ -148,14 +149,20 @@ wireframe(storeI3 ~ plotArea * plotw, data=DD3hostgenSIR,
           main="DDHost SIR I3-large-10kg", drape = TRUE)
 wireframe(storeI1 ~ plotArea * plotw,data=DD3hostgenSIR, 
           main="DDHost SIR I1-small-0.1kg", drape = TRUE)
-wireframe(storeS1 ~ plotArea * plotw,data=DD3hostgenw, 
+wireframe(storeS1 ~ plotArea * plotw,data=DD3hostgenSIR, 
           main="DDHost SIR S1-small-0.1kg",drape = TRUE)
 
 wireframe((storeI1+storeI2+storeI3)/(storeI1+storeS1+storeI2+storeI3+storeS2+storeS3+storeR1+storeR2+storeR3)  ~ plotArea * plotw,
-          data=DD3hostgenSIR, main="SIR prevalence in all", drape = TRUE)
-wireframe((storeI1+storeI2+storeI3)~ plotArea * plotw,data=DD3hostgenw, 
-          main="SIR number of infected individuals", drape = TRUE)
-
+          data=DD3hostgenSIR, main="SIR prevalence in all", drape = TRUE, log='x')
+wireframe((storeI1+storeI2+storeI3)~ plotArea * plotw,data=DD3hostgenSIR, 
+          main="SIR number of infected individuals", drape = TRUE, log='x')
+ramp=matlab.like(11)
+grps <- with(DD3hostgenSIR, cut(plotw, breaks = 10, include.lowest = TRUE))
+plot(DD3hostgenSIR$plotArea, DD3hostgenSIR$storeI3,pch=20, log='x', 
+     col=(ramp)[grps], bty='n', xlab='plot area', ylab='mid-class infecteds',
+     )
+label<-as.character(seq(0,1,  by=0.1)) 
+legend("topleft",label,pch=20,cex=.6, col=ramp, bty='n')
 ########
 # Frequency dependent transmission
 
@@ -178,22 +185,25 @@ parametersF <- c(betaF,
 
 #ODE for FD transmission
 
-threehostpatchF <- function(t, state, parameters) {
+threehostpatchFDSIR <- function(t, state, parameters) {
   with(as.list(c(state, parametersF)), {
-    dS1 <- b[1]*(S1+I1)*(1-((S1+I1)/(Dens[1]*Area))) - ((betaF[1]*S1*I1/(S1+I1+S2+I2+S3+I3)) + (w*betaF[2]*S1*I2/(S1+I1+S2+I2+S3+I3)) + (w*betaF[3]*S1*I3/(S1+I1+S2+I2+S3+I3))) - d[1]*S1 + gamma[1]*I1
+    dS1 <- b[1]*(S1+I1+R1)*(1-((S1+I1+R1)/(Dens[1]*Area))) - ((betaF[1]*S1*I1/(S1+I1+S2+I2+S3+I3)) + (w*betaF[2]*S1*I2/(S1+I1+S2+I2+S3+I3)) + (w*betaF[3]*S1*I3/(S1+I1+S2+I2+S3+I3))) - d[1]*S1 
     dI1 <- ((betaF[1]*S1*I1/(S1+I1+S2+I2+S3+I3)) + (w*betaF[2]*S1*I2/(S1+I1+S2+I2+S3+I3)) + (w*betaF[3]*S1*I3/(S1+I1+S2+I2+S3+I3))) - (d[1]+alphaF[1]+gamma[1])*I1
-    dS2 <- b[2]*(S2+I2)*(1-((S2+I2)/(Dens[2]*Area))) - ((w*betaF[1]*S2*I1/(S1+I1+S2+I2+S3+I3)) + (betaF[2]*S2*I2/(S1+I1+S2+I2+S3+I3)) + (w*betaF[3]*S2*I3/(S1+I1+S2+I2+S3+I3))) - d[2]*S2 + gamma[2]*I2
+    dR1 <- gamma[1]*I1 - d[1]*R1
+    dS2 <- b[2]*(S2+I2+R2)*(1-((S2+I2+R2)/(Dens[2]*Area))) - ((w*betaF[1]*S2*I1/(S1+I1+S2+I2+S3+I3)) + (betaF[2]*S2*I2/(S1+I1+S2+I2+S3+I3)) + (w*betaF[3]*S2*I3/(S1+I1+S2+I2+S3+I3))) - d[2]*S2 
     dI2 <- ((w*betaF[1]*S2*I1/(S1+I1+S2+I2+S3+I3)) + (betaF[2]*S2*I2/(S1+I1+S2+I2+S3+I3)) + (w*betaF[3]*S2*I3/(S1+I1+S2+I2+S3+I3))) - (d[2]+alphaF[2]+gamma[2])*I2
-    dS3 <- b[3]*(S3+I3)*(1-((S3+I3)/(Dens[1]*Area))) - ((w*betaF[1]*S3*I1/(S1+I1+S2+I2+S3+I3)) +  (w*betaF[2]*S3*I2/(S1+I1+S2+I2+S3+I3)) + (betaF[3]*S3*I3/(S1+I1+S2+I2+S3+I3))) - d[3]*S3 + gamma[3]*I3
+    dR2 <- gamma[2]*I2 - d[2]*R2
+    dS3 <- b[3]*(S3+I3+R3)*(1-((S3+I3+R3)/(Dens[3]*Area))) - ((w*betaF[1]*S3*I1/(S1+I1+S2+I2+S3+I3)) +  (w*betaF[2]*S3*I2/(S1+I1+S2+I2+S3+I3)) + (betaF[3]*S3*I3/(S1+I1+S2+I2+S3+I3))) - d[3]*S3 
     dI3 <- ((w*betaF[1]*S3*I1/(S1+I1+S2+I2+S3+I3)) +  (w*betaF[2]*S3*I2/(S1+I1+S2+I2+S3+I3)) + (betaF[3]*S3*I3/(S1+I1+S2+I2+S3+I3))) - (d[3]+alphaF[3]+gamma[3])*I3
-    list(c(dS1, dI1, dS2, dI2, dS3, dI3))
+    dR3 <- gamma[3]*I3 - d[3]*R3
+    list(c(dS1, dI1, dR1, dS2, dI2, dR2, dS3, dI3, dR3))
   })
 }
 
 ### output of times ###
 times <- seq(0, 100, by = 1)
 
-out <- as.data.frame(ode(y= state, times = times, func = threehostpatchF, parms = parametersF, method="ode45" ))
+out <- as.data.frame(ode(y= state, times = times, func = threehostpatchFDSIR, parms = parametersF, method="ode45" ))
 out$time = NULL
 
 plot(times, out$S1, type='l',  xlab = 'years', main= 'Species 1', bty='n', col="darkgreen", 
@@ -241,14 +251,17 @@ for(i in (Amax*3/4):(Amax-1)) {
 
 w=seq(0,1, by=0.1)
 
-times <- seq(0, 40, by = 1)
+times <- seq(0, 100, by = 1)
 
 storeS1 = {};
 storeI1 = {};
+storeR1 = {};
 storeS2 = {};
 storeI2 = {};
+storeR2 = {};
 storeS3 = {};
 storeI3 = {};
+storeR3 = {};
 plotArea = {};
 plotw= {};
 
@@ -256,29 +269,32 @@ for (i in Area) {
   parametersF["Area"] = i;
   for (j in w){
     parametersF["w"] = j;
-    out <- as.data.frame(ode(y= state, times = times, func = threehostpatchF, parms = parametersF, method="ode45"));
+    out <- as.data.frame(ode(y= state, times = times, func = threehostpatchFDSIR, parms = parametersF, method="ode45"));
     storeS1 = c(storeS1, out$S1[length(times)]);
     storeI1 = c(storeI1, out$I1[length(times)]);
+    storeR1 = c(storeR1, out$R1[length(times)]);
     storeS2 = c(storeS2, out$S2[length(times)]);
     storeI2 = c(storeI2, out$I2[length(times)]);
+    storeR2 = c(storeR2, out$R2[length(times)]);
     storeS3 = c(storeS3, out$S3[length(times)]);
     storeI3 = c(storeI3, out$I3[length(times)]);
+    storeR3 = c(storeR3, out$R3[length(times)]);
     plotArea = c(plotArea, i)
     plotw= c(plotw, j)
   }
 }
 
 
-FD3hostgenw<-as.data.frame(cbind(plotArea,plotw,storeS1,storeI1,storeS2,storeI2,storeS3,storeI3))
-write.csv(FD3hostgenw, file = "FD3hostgenw.csv",row.names=FALSE)
-FD3hostgenw$storeS2
+FD3hostgenSIR<-as.data.frame(cbind(plotArea,plotw,storeS1,storeI1,storeS2,storeI2,storeS3,storeI3))
+write.csv(FD3hostgenSIR, file = "FD3hostgenSIR",row.names=FALSE)
+FD3hostgenSIR$storeS2
 
-wireframe(storeS2 ~ plotArea * plotw, data=FD3hostgenw, main="Host S2-midsize-1kg")
-wireframe(storeI2 ~ plotArea * plotw, data=FD3hostgenw, main="Host I2-midsize-1kg")
-wireframe(storeS3 ~ plotArea * plotw, data=FD3hostgenw,main="Host S3-large-10kg")
-wireframe(storeI3 ~ plotArea * plotw, data=FD3hostgenw,main="Host I3-large-10kg")
-wireframe(storeI1 ~ plotArea * plotw,data=FD3hostgenw, main="Host I1-small-0.1kg")
-wireframe(storeS1 ~ plotArea * plotw,data=FD3hostgenw, main="Host S1-small-0.1kg")
+wireframe(storeS2 ~ plotArea * plotw, data=FD3hostgenSIR, main="Host S2-midsize-1kg")
+wireframe(storeI2 ~ plotArea * plotw, data=FD3hostgenSIR, main="Host I2-midsize-1kg")
+wireframe(storeS3 ~ plotArea * plotw, data=FD3hostgenSIR,main="Host S3-large-10kg")
+wireframe(storeI3 ~ plotArea * plotw, data=FD3hostgenSIR,main="Host I3-large-10kg")
+wireframe(storeI1 ~ plotArea * plotw,data=FD3hostgenSIR, main="Host I1-small-0.1kg")
+wireframe(storeS1 ~ plotArea * plotw,data=FD3hostgenSIR, main="Host S1-small-0.1kg")
 
-wireframe((storeI1+storeI2+storeI3)/(storeI1+storeS1+storeI2+storeI3+storeS2+storeS3)  ~ plotArea * plotw,data=FD3hostgenw, main="prevalence in all")
-wireframe((storeI1+storeI2+storeI3)~ plotArea * plotw,data=FD3hostgenw, main="number of infected individuals")
+wireframe((storeI1+storeI2+storeI3)/(storeI1+storeS1+storeI2+storeI3+storeS2+storeS3+storeR1+storeR2+storeR3)  ~ plotArea * plotw,data=FD3hostgenSIR, main="prevalence in all")
+wireframe((storeI1+storeI2+storeI3)~ plotArea * plotw,data=FD3hostgenSIR, main="number of infected individuals")
