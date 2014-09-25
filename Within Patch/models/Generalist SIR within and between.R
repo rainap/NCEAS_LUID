@@ -201,7 +201,7 @@ threehostpatchFDSIR <- function(t, state, parameters) {
 }
 
 ### output of times ###
-times <- seq(0, 100, by = 1)
+times <- seq(0, 100, by = 0.01)
 
 out <- as.data.frame(ode(y= state, times = times, func = threehostpatchFDSIR, parms = parametersF, method="ode45" ))
 out$time = NULL
