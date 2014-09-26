@@ -251,7 +251,7 @@ for(i in (Amax*3/4):(Amax-1)) {
 
 w=seq(0,1, by=0.1)
 
-times <- seq(0, 100, by = 1)
+times <- seq(0, 100, by = .001)
 
 storeS1 = {};
 storeI1 = {};
