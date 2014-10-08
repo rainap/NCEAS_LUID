@@ -1,6 +1,6 @@
 ######### 
 # Deterministic Patch-Matrix model with slider for patch to matrix transmission
-# Hamish McCallum Version September 24 2014
+# Christina Faust Version October 8 2014
 ########
 rm(list = ls())
 
@@ -22,30 +22,31 @@ library(manipulate)
 patch.matrix.model.f <- function(Time, State, Parameters) {
   with(as.list(c(State, Parameters)), {
     N.p<-S.p+I.p+R.p
-    dS.p<-N.p*(b.p-d.p-N.p*k.p/f)-S.p*(beta.pp*I.p+beta.mp*I.m*edge)/N.p^kappa+gamma.p*R.p
-    dI.p<-S.p*(beta.pp*I.p+beta.mp*I.m*edge)/N.p^kappa-I.p*(alpha.p+d.p+sigma.p+N.p*k.p/f)
-    dR.p<-I.p*sigma.p-R.p*(d.p+gamma.p+N.p*k.p/f)
-    
     N.m<-S.m+I.m+R.m
-    dS.m<-N.m*(b.m-d.m-N.m*k.m/(2-f))-S.m*(beta.mm*I.m+beta.pm*I.p*edge)/N.m^kappa+gamma.m*I.m
-    dI.m<-S.m*(beta.mm*I.m+beta.pm*I.p*edge)/N.m^kappa-I.m*(alpha.m+d.m+sigma.m+N.m*k.m/(2-f))
-    dR.m<-I.m*sigma.m-R.m*(d.m+gamma.m+N.m*k.m/(2-f))
+    
+    dS.p<-N.p*b.p*(1-N.p*k.p/f) - ((S.p*beta.pp*I.p)/N.p^kappa+(epsilon*beta.mp*I.m)/(N.p+N.m)^kappa) - d.p*S.p + gamma.p*R.p
+    dI.p<-(S.p*beta.pp*I.p)/N.p^kappa+(epsilon*beta.mp*I.m)/(N.p+N.m)^kappa - I.p*(alpha.p+d.p+sigma.p)
+    dR.p<-I.p*sigma.p-R.p*(d.p+gamma.p)
+    
+    dS.m<-N.m*(b.m-N.m*k.m/(2-f)) - ((S.m*beta.mm*I.m)/N.m^kappa+(epsilon*beta.pm*I.p)/(N.p+N.m)^kappa) - d.m*S.m + gamma.m*R.m
+    dI.m<-((S.m*beta.mm*I.m)/N.m^kappa+(epsilon*beta.pm*I.p)/(N.p+N.m)^kappa) - I.m*(alpha.m+d.m+sigma.m)
+    dR.m<-I.m*sigma.m-R.m*(d.m+gamma.m)
     
    return(list(c(dS.p, dI.p, dR.p,dS.m, dI.m, dR.m)))
   })
 }
 
 ### output of times ###
-times <- seq(0, 100, by = 1)
+times <- seq(0, 100, by = 0.01)
 
 plot.fun<-function(f){
 
 ### set some parameters
 params<-c(b.p=.5,d.p=0.1,k.p=0.001,beta.pp=0.01,beta.pm=0.001,gamma.p=0.05,alpha.p=0.001,
-          sigma.p=0.05,edge=(1+cos(f*(pi*3/2)-2.5)), f=f,
+          sigma.p=0.05,epsilon=(1+cos(f*(pi*3/2)-2.5)), f=f,
           b.m=.1,d.m=0.02,k.m=0.0001,beta.mm=0.0001,beta.mp=0.0,gamma.m=0.05,alpha.m=0.01,
           sigma.m=0.05,kappa=0)
-initial.values<-c(S.p=20,I.p=2,R.p=0,S.m=100,I.m=0,R.m=0)
+initial.values<-c(S.p=20,I.p=1,R.p=0,S.m=100,I.m=0,R.m=0)
 print(system.time(
   out<-ode(func=patch.matrix.model.f,y=initial.values,parms=params,times=times)))
 head(out,n=3)
@@ -99,7 +100,7 @@ ngm1.21 <- ngm1.2(params[["beta.mp"]],params[["edge"]])
 ngm_f1<-matrix(c(ngm1.11,ngm1.21,ngm1.12,ngm1.22), nrow=2,ncol=2)
 eigen(ngm_f1)
 
-initial.values<-c(S.p=20,I.p=2,R.p=0,S.m=100,I.m=0,R.m=0)
+initial.values<-c(S.p=20,I.p=1,R.p=0,S.m=100,I.m=0,R.m=0)
 
 
 R0= (params[["beta.pp"]]*S.p*I.p/(params[["alpha.p"]]+params[["gamma.p"]]))
