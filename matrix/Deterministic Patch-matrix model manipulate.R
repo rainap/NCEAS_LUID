@@ -42,11 +42,26 @@ times <- seq(0, 100, by = 1)
 plot.fun<-function(beta.pm.sl){
 
 ### set some parameters
-params<-c(b.p=.5,d.p=0.1,k.p=0.001,beta.pp=0.01,beta.pm=beta.pm.sl,gamma.p=0.05,alpha.p=0.2,
+params<-c(b.p=.5,
+          d.p=0.1,
+          k.p=0.001,
+          beta.pp=0.01,
+          beta.pm=beta.pm.sl,
+          gamma.p=0.05,
+          alpha.p=0.2,
           sigma.p=0.05,
-          b.m=.1,d.m=0.02,k.m=0.0001,beta.mm=0.0001,beta.mp=0.0,gamma.m=0.05,alpha.m=0.0001,
-          sigma.m=0.05,kappa=0)
-initial.values<-c(S.p=20,I.p=2,R.p=0,S.m=100,I.m=0,R.m=0)
+          b.m=.1,
+          d.m=0.02,
+          k.m=0.0001,
+          beta.mm=0.0001,
+          beta.mp=0.0,
+          gamma.m=0.05,
+          alpha.m=0.0001,
+          sigma.m=0.05,
+          kappa=0)
+
+initial.values<-c(S.p=20,I.p=1,R.p=0,S.m=100,I.m=0,R.m=0)
+
 print(system.time(
   out<-ode(func=patch.matrix.model,y=initial.values,parms=params,times=times)))
 head(out,n=3)
@@ -71,3 +86,4 @@ manipulate(plot.fun(beta.pm.sl),beta.pm.sl=slider(0,0.01))
 
 beta.pm.sl<-slider(0,0.1)
 )
+
