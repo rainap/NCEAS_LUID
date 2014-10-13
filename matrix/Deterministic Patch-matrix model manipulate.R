@@ -1,29 +1,18 @@
 ######### 
 # Deterministic Patch-Matrix model with slider for patch to matrix transmission
 #Hamish McCallum Version September 24 2014
+# Adjusted by CFaust (documentation on git hub)
 ########
 rm(list = ls())
 
 
 library(deSolve)
 library(manipulate)
-#see word document "pathogen spillover for fragmented landscapes" for equation and parameter definitions
-# most of this is pretty obvious
-#note that kappa describes position on density-dependent frequency dependent transmission continuum
-#beta.pp is pathogen transmission within patch
-#beta.mm is pathogen transmission within matrix
-#beta.pm is transmission from patch to matrix (ie spillover)
-#at this point, this is the only parameter used for the slider
-#What needs to happen is that we need a "conversion" parameter
-#As this increases, it will (via a yet to be specified nonlinear function)
-# 1  increase beta.pm (more edge)
-# 2  increase k.p (reduce carrying capacity in patch habitat, because of habitat loss) 
-# 3   decrease k.m (increase carrying capacity in matrix habitat, as more matrix created)
 
 patch.matrix.model <- function(Time, State, Parameters) {
   with(as.list(c(State, Parameters)), {
     N.p<-S.p+I.p+R.p
-    dS.p<-S.p*(b.p-d.p-N.p*k.p)-S.p*(beta.pp*I.p+beta.mp*I.m)/N.p^kappa+gamma.p*I.p
+    dS.p<-N.p*(b.p-N.p*k.p) - S.p*(beta.pp*I.p+beta.mp*I.m)/N.p^kappa - S.p*d.p +gamma.p*I.p
     dI.p<-S.p*(beta.pp*I.p+beta.mp*I.m)/N.p^kappa-I.p*(alpha.p+d.p+sigma.p+N.p*k.p)
     dR.p<-I.p*sigma.p-R.p*(d.p+gamma.p+N.p*k.p)
     
@@ -42,15 +31,15 @@ times <- seq(0, 100, by = 1)
 plot.fun<-function(beta.pm.sl){
 
 ### set some parameters
-params<-c(b.p=.5,
+params<-c(b.p=.5, #birth rate for p (patch) species
           d.p=0.1,
-          k.p=0.001,
-          beta.pp=0.01,
-          beta.pm=beta.pm.sl,
-          gamma.p=0.05,
-          alpha.p=0.2,
-          sigma.p=0.05,
-          b.m=.1,
+          k.p=0.001, #1/carrying capacity
+          beta.pp=0.01, #within patch species transmission rate
+          beta.pm=beta.pm.sl, #variable patch to matrix transmission
+          gamma.p=0.05, #loss of immunity R->S
+          alpha.p=0.2, #disease-induced mortality
+          sigma.p=0.05, #recovery rate I->R
+          b.m=.1, #Matrix parameters
           d.m=0.02,
           k.m=0.0001,
           beta.mm=0.0001,
@@ -58,7 +47,7 @@ params<-c(b.p=.5,
           gamma.m=0.05,
           alpha.m=0.0001,
           sigma.m=0.05,
-          kappa=0)
+          kappa=0) # can adjust for frequency vs. density dependent
 
 initial.values<-c(S.p=20,I.p=1,R.p=0,S.m=100,I.m=0,R.m=0)
 
