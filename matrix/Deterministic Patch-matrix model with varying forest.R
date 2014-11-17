@@ -37,30 +37,31 @@ patch.matrix.model.f <- function(Time, State, Parameters) {
 }
 
 ### output of times ###
-times <- seq(0, 100, by = 0.0001)
+times <- seq(0, 200, by = 0.01)
 
 plot.fun<-function(f){
 
 ### set some parameters
 params<-c(b.p=.5,d.p=0.1,k.p=0.001,beta.pp=0.05,beta.pm=0.001,gamma.p=0.05,alpha.p=0.001,
           sigma.p=0.05,epsilon=(1+cos(f*(pi*3/2)-2.5)), f=f,
-          b.m=.1,d.m=0.02,k.m=0.0001,beta.mm=0.001,beta.mp=0.0,gamma.m=0.05,alpha.m=0.01,
+          b.m=.1,d.m=0.02,k.m=0.0009,beta.mm=0.0001,beta.mp=0.0,gamma.m=0.05,alpha.m=0.01,
           sigma.m=0.05,kappa=0)
 initial.values<-c(S.p=20,I.p=1,R.p=0,S.m=100,I.m=0,R.m=0)
 print(system.time(
   out<-ode(func=patch.matrix.model.f,y=initial.values,parms=params,times=times))) # if you are having LSODA error messages you may need to switch to ode45 solver; insert, method="ode45" into the  ode function)
-head(out,n=2)
-par(mfrow=c(2,1))
 
-#plot the patch hosts
-matplot(out[,"time"],out[,2:4],type="l",xlab="time",ylab="number", bty='n',
-        main="Patch Hosts",lwd=2, ylim=c(0,500))
-legend("topright",c("susc","inf","rec"),col=1:3,lty=1:3)
-
-#plot the matrix hosts
+head(out,n=4)
+par(mfrow=c(2,2))
+matplot(out[,"time"],out[,2:4],type="l",xlab="time",ylab="number", bty='n',cex=0.8,
+        main="Patch Hosts",lwd=2, ylim=c(0,1000),col=c("black","darkred","forestgreen"))
+legend("topright",c("susc","inf","rec"),col=c("black","darkred","forestgreen"),pch=20,bty='n',cex=0.7)
+matplot(out[,"time"],(out[,3]/(out[,2]+out[,3]+out[,4])),type="l",xlab="time",ylab="number", bty='n',
+        main="Prop. Infected Patch Hosts",lwd=2, ylim=c(0,1),cex=0.8) 
 matplot(out[,"time"],out[,5:7],type="l",xlab="time",ylab="number", bty='n',
-        main="Matrix Hosts",lwd=2, ylim=c(0,5000))
-legend("topright",c("susc","inf","rec"),col=1:3,lty=1:3)
+        main="Matrix Hosts",lwd=2, ylim=c(0,1000),cex=0.8,col=c("black","darkred","forestgreen"))
+legend("topright",c("susc","inf","rec"),col=c("black","darkred","forestgreen"),pch=20, bty='n',cex=0.7)
+matplot(out[,"time"],(out[,6]/(out[,5]+out[,6]+out[,7])),type="l",xlab="time",ylab="number", bty='n',
+        main="Prop. Infected Matrix Hosts",lwd=2, ylim=c(0,1),cex=0.8)
 
 }
 

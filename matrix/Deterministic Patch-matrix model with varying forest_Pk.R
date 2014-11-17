@@ -41,8 +41,8 @@ ngm.between.fd<-function(epsilon, beta, alpha, sigma, d){
   return(z)
 }
 f=seq(0.01,1,by=0.01) #vector for different forested proportions
-params<-c(d.p=0.1,k.p=0.007,beta.pp=0.2,beta.pm=0.1,gamma.p=0.03,alpha.p=0.001,sigma.p=0.05,
-          d.m=0.02,k.m=0.006,beta.mm=0.002,beta.mp=0.1,gamma.m=0.05,alpha.m=0.01,sigma.m=0.05) 
+params<-c(b.p=0.3,d.p=0.1,k.p=0.007,beta.pp=0.2,beta.pm=0.1,gamma.p=0.03,alpha.p=0.001,sigma.p=0.05,
+          b.m=0.05, d.m=0.02,k.m=0.006,beta.mm=0.002,beta.mp=0.1,gamma.m=0.05,alpha.m=0.01,sigma.m=0.05)
 
 epsilon=(1+cos(f*(pi*3/2)-2)) #vector of edges at different forested levels
 #R0; plotting within and between host R0
@@ -62,7 +62,7 @@ for (i in 1:length(f)){
   R0.p.fd[i] = (params[["beta.pp"]]/(params[["alpha.p"]]+params[["gamma.p"]]+params[["sigma.p"]]))
   R0.m.fd[i] = (params[["beta.mm"]]/(params[["alpha.m"]]+params[["gamma.m"]]+params[["sigma.m"]]))
 }
-par(bg=NA) 
+par(bg='white') 
 plot(f, R0.combin.fd, type="l",lwd=4, 
      ylim=c(0,5),bty='n', 
      ylab="R0",xlab="proportion forested")
@@ -94,7 +94,7 @@ patch.matrix.model.f <- function(Time, State, Parameters) {
 params<-c(d.p=0.1,k.p=0.007,beta.pp=0.2,beta.pm=0.1,gamma.p=0.03,alpha.p=0.001,sigma.p=0.05,
           d.m=0.02,k.m=0.006,beta.mm=0.02,beta.mp=0.1,gamma.m=0.05,alpha.m=0.01,sigma.m=0.05) 
 #iterations
-times <- seq(0, 1000, by = 0.01)
+times <- seq(0, 200, by = 0.01)
 plot.fun<-function(f){
     params<-c(b.p=0.3,d.p=0.1,k.p=0.007,beta.pp=0.2,beta.pm=0.1,gamma.p=0.03,alpha.p=0.001,sigma.p=0.05,
               b.m=0.05, d.m=0.02,k.m=0.006,beta.mm=0.002,beta.mp=0.1,gamma.m=0.05,alpha.m=0.01,sigma.m=0.05,
@@ -111,7 +111,7 @@ plot.fun<-function(f){
     matplot(out[,"time"],(out[,3]/(out[,2]+out[,3]+out[,4])),type="l",xlab="time",ylab="number", bty='n',
             main="Prop. Infected Patch Hosts",lwd=2, ylim=c(0,1),cex=0.8) 
     matplot(out[,"time"],out[,5:7],type="l",xlab="time",ylab="number", bty='n',
-            main="Matrix Hosts",lwd=2, ylim=c(0,500),cex=0.8,col=c("black","darkred","forestgreen"))
+            main="Matrix Hosts",lwd=2, ylim=c(0,200),cex=0.8,col=c("black","darkred","forestgreen"))
     legend("topright",c("susc","inf","rec"),col=c("black","darkred","forestgreen"),pch=20, bty='n',cex=0.7)
     matplot(out[,"time"],(out[,6]/(out[,5]+out[,6]+out[,7])),type="l",xlab="time",ylab="number", bty='n',
             main="Prop. Infected Matrix Hosts",lwd=2, ylim=c(0,1),cex=0.8)    
